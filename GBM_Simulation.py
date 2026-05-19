@@ -14,6 +14,43 @@ import numpy as np
 import math
 
 TRADING_DAYS = 252
+positions = []
+shares = []
+
+"""
+Check if number of positions is valid and then run simulation on portfolio.
+"""
+def main():
+    getPortfolio()
+    if (len(positions) < 1):
+        print("No positions given")
+    else:
+        # prompt user for risk free rate
+        rf = float(input('What is the current risk free rate? ')) / 100
+        if (len(positions) == 1):
+            portfolioCalculation(positions, shares, rf)
+        else:
+            portfolioCalculation(positions, shares, rf)
+
+"""
+Prompt user for positions in portfolio and number of shares of each position.
+"""
+def getPortfolio():
+    # prompt user for ticker
+    ticker = input('What Equity\'s price would you like to simulate? '
+                    'or \'quit\' to stop: ')
+    while (ticker != "quit"):
+        # prompt user for number of shares of equity
+        share_count = int(input('How many Shares of this equity? '))
+
+        # add ticker to positions and number of shares to shares
+        positions.append(ticker)
+        shares.append(share_count)
+        
+        # re-prompt user for next ticker
+        ticker = input('What Equity\'s price would you like to simulate? '
+                    'or \'quit\' to stop: ')
+
 
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
@@ -25,10 +62,7 @@ sig = volatility
 dt = time delta
 z = random shock
 """
-def main():
-    # retrieve desired ticker and current risk free rate from user input
-    ticker = input('What Equity\'s price would you like to simulate? ')
-    rf = float(input('What is the current risk free rate? ')) / 100
+def GBMCalculation(ticker, rf):
 
     # preparing inputs needed for calculation
     s = yf.Ticker(ticker).history(period="1d")["Close"].iloc[-1]
@@ -39,7 +73,7 @@ def main():
 
     # calculating possible future price
     price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * math.sqrt(dt) * z))
-    print("One simulated future price: %.2f" % (price))
+    return price
 
 """
 Expected return is utilized in GBM to calculate the drift factor and is 
@@ -74,6 +108,31 @@ def volatilityCalculation(ticker):
     daily_volatility = cleaned_returns.std()
     sig = daily_volatility * math.sqrt(TRADING_DAYS)
     return sig
+
+"""
+Calculates total value of portfolio before and after simulation of individual
+equities. Also calculates the percent change in total portfolio value. Prints 
+results to console.
+"""
+def portfolioCalculation(positions, shares, rf):
+    portfolio_value_before_simulation = 0
+    for index in range(0, len(positions)):
+        price = yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1]
+        total_equity_allocation_value = price * shares[index]
+        portfolio_value_before_simulation += total_equity_allocation_value
+
+    portfolio_value_after_simulation = 0
+    for index in range(0, len(positions)):
+        simulated_price = GBMCalculation(positions[index], rf)
+        total_equity_allocation_value = simulated_price * shares[index]
+        portfolio_value_after_simulation += total_equity_allocation_value
+
+    percent_change = ((portfolio_value_after_simulation 
+                      / portfolio_value_before_simulation) - 1) * 100
+
+    print("Portfolio before: %.2f" % (portfolio_value_before_simulation))
+    print("Portfolio after: %.2f" % (portfolio_value_after_simulation))
+    print("Change percent: %.2f%%" % (percent_change))
 
 
 if __name__=="__main__":
