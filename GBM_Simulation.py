@@ -14,14 +14,33 @@ import numpy as np
 import math
 
 TRADING_DAYS = 252
+positions = []
+shares = []
 
 
 def main():
-    # retrieve desired ticker and current risk free rate from user input
-    ticker = input('What Equity\'s price would you like to simulate? ')
-    rf = float(input('What is the current risk free rate? ')) / 100
+    # prompt user for ticker
+    ticker = input('What Equity\'s price would you like to simulate? '
+                    'or \'quit\' to stop: ')
+    while (ticker != "quit"):
+        # prompt user for number of shares of equity
+        share_count = int(input('How many Shares of this equity? '))
 
-    singleGBMCalculation(ticker, rf)
+        # add ticker to positions and number of shares to shares
+        positions.append(ticker)
+        shares.append(share_count)
+        
+        # re-prompt user for next ticker
+        ticker = input('What Equity\'s price would you like to simulate? '
+                    'or \'quit\' to stop: ')
+
+    if (len(positions) == 1):
+        singleGBMCalculation(positions[0])
+    elif (len(positions) > 1):
+        # call portfolio calculation here
+        print("portolio calculation here")
+    else:
+        print("No positions given")
 
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
@@ -33,7 +52,10 @@ sig = volatility
 dt = time delta
 z = random shock
 """
-def singleGBMCalculation(ticker, rf):
+def singleGBMCalculation(ticker):
+    # prompt user for risk free rate
+    rf = float(input('What is the current risk free rate? ')) / 100
+
     # preparing inputs needed for calculation
     s = yf.Ticker(ticker).history(period="1d")["Close"].iloc[-1]
     dt = 1 / TRADING_DAYS
