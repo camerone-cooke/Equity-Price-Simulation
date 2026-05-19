@@ -15,6 +15,14 @@ import math
 
 TRADING_DAYS = 252
 
+
+def main():
+    # retrieve desired ticker and current risk free rate from user input
+    ticker = input('What Equity\'s price would you like to simulate? ')
+    rf = float(input('What is the current risk free rate? ')) / 100
+
+    singleGBMCalculation(ticker, rf)
+
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
 price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * math.sqrt(dt) * z))
@@ -25,11 +33,7 @@ sig = volatility
 dt = time delta
 z = random shock
 """
-def main():
-    # retrieve desired ticker and current risk free rate from user input
-    ticker = input('What Equity\'s price would you like to simulate? ')
-    rf = float(input('What is the current risk free rate? ')) / 100
-
+def singleGBMCalculation(ticker, rf):
     # preparing inputs needed for calculation
     s = yf.Ticker(ticker).history(period="1d")["Close"].iloc[-1]
     dt = 1 / TRADING_DAYS
