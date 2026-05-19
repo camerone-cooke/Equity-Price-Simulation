@@ -18,11 +18,24 @@ positions = []
 shares = []
 
 """
-Prompt user for positions in portfolio and number of shares of each position.
 Check if number of positions is valid and then run simulation on portfolio.
-Return the before and after value of portfolio along with percent change.
 """
 def main():
+    getPortfolio()
+    if (len(positions) < 1):
+        print("No positions given")
+    else:
+        # prompt user for risk free rate
+        rf = float(input('What is the current risk free rate? ')) / 100
+        if (len(positions) == 1):
+            portfolioCalculation(positions, shares, rf)
+        else:
+            portfolioCalculation(positions, shares, rf)
+
+"""
+Prompt user for positions in portfolio and number of shares of each position.
+"""
+def getPortfolio():
     # prompt user for ticker
     ticker = input('What Equity\'s price would you like to simulate? '
                     'or \'quit\' to stop: ')
@@ -38,15 +51,6 @@ def main():
         ticker = input('What Equity\'s price would you like to simulate? '
                     'or \'quit\' to stop: ')
 
-    if (len(positions) < 1):
-        print("No positions given")
-    else:
-        # prompt user for risk free rate
-        rf = float(input('What is the current risk free rate? ')) / 100
-        if (len(positions) == 1):
-            portfolioCalculation(positions, shares, rf)
-        else:
-            portfolioCalculation(positions, shares, rf)
 
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
@@ -105,6 +109,11 @@ def volatilityCalculation(ticker):
     sig = daily_volatility * math.sqrt(TRADING_DAYS)
     return sig
 
+"""
+Calculates total value of portfolio before and after simulation of individual
+equities. Also calculates the percent change in total portfolio value. Prints 
+results to console.
+"""
 def portfolioCalculation(positions, shares, rf):
     portfolio_value_before_simulation = 0
     for index in range(0, len(positions)):
@@ -124,7 +133,6 @@ def portfolioCalculation(positions, shares, rf):
     print("Portfolio before: %.2f" % (portfolio_value_before_simulation))
     print("Portfolio after: %.2f" % (portfolio_value_after_simulation))
     print("Change percent: %.2f%%" % (percent_change))
-
 
 
 if __name__=="__main__":
