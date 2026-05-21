@@ -84,9 +84,9 @@ def GBMCalculation(positions, rf):
     # calculate possible future price(s)
     future_prices = np.array([])
     for index in range(0, len(positions)):
-        drift = s[index] * np.exp((mu[index] - (0.5 * (sig[index] ** 2))) * dt)
+        drift = (mu[index] - (0.5 * (sig[index] ** 2))) * dt
         diffusion = (sig[index] * np.sqrt(dt) * correlated_z[index])
-        next_price = drift + diffusion
+        next_price = s[index] * np.exp(drift + diffusion)
         future_prices = np.append(future_prices,  next_price)
 
     return future_prices
