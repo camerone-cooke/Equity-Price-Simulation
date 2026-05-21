@@ -59,17 +59,31 @@ sig = volatility
 dt = time delta
 z = random shock
 """
-def GBMCalculation(ticker, rf):
+def GBMCalculation(positions, rf):
     # preparing inputs needed for calculation
-    s = yf.Ticker(ticker).history(period="1d")["Close"].iloc[-1]
     dt = 1 / TRADING_DAYS
-    mu = float(expectedReturnCalculation(ticker, rf))
-    sig = volatilityCalculation(ticker)
+
+    s = np.array([])
+    mu = np.array([])
+    sig = np.array([])
+
+    for index in range(len(positions)):
+        s = np.append(s, 
+                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
+        mu = np.append(mu, float(expectedReturnCalculation(positions[index], rf)))
+        sig = np.append(sig, volatilityCalculation(positions[index]))
+    
     z = np.random.normal(0, 1)
 
-    # calculating possible future price
-    price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * np.sqrt(dt) * z))
-    return price
+    # calculate possible future price(s)
+    future_prices = np.array([])
+    for index in range(0, len(positions)):
+        drift = s[index] * np.exp((mu[index] - (0.5 * (sig[index] ** 2))) * dt)
+        diffusion = (sig[index] * np.sqrt(dt) * z)
+        next_price = drift + diffusion
+        future_prices = np.append(future_prices,  next_price)
+
+    return future_prices
 
 """
 Expected return is utilized in GBM to calculate the drift factor and is 
@@ -118,9 +132,9 @@ def portfolioCalculation(positions, shares, rf):
         portfolio_value_before_simulation += total_equity_allocation_value
 
     portfolio_value_after_simulation = 0
+    simulated_prices = GBMCalculation(positions, rf)
     for index in range(0, len(positions)):
-        simulated_price = GBMCalculation(positions[index], rf)
-        total_equity_allocation_value = simulated_price * shares[index]
+        total_equity_allocation_value = simulated_prices[index] * shares[index]
         portfolio_value_after_simulation += total_equity_allocation_value
 
     percent_change = ((portfolio_value_after_simulation 
