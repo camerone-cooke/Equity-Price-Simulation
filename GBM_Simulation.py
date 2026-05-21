@@ -52,7 +52,7 @@ def getPortfolio():
 
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
-price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * math.sqrt(dt) * z))
+price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * np.sqrt(dt) * z))
 Where: 
 s = current price of equity
 mu = expected return
@@ -114,7 +114,7 @@ def expectedReturnCalculation(ticker, rf):
 Sigma is the standard deviation of the equity's returns and is utilized in GBM 
 as the magnitude of the 'shocks'. Sigma is determined by taking the daily 
 logarithmic returns of the equity. The formula for determining sigma is:
-sig = daily_volatility * sqrt(252)
+sig = daily_volatility * np.sqrt(252)
 """
 def volatilityCalculation(ticker):
     historical_price_data = yf.Ticker(ticker).history(period='1y')['Close']
