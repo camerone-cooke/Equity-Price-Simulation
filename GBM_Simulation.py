@@ -11,31 +11,27 @@ iterations. The results are then displayed in a graphical format.
 # import needed libraries
 import yfinance as yf
 import numpy as np
-import math
 
 TRADING_DAYS = 252
-positions = []
-shares = []
 
 """
 Check if number of positions is valid and then run simulation on portfolio.
 """
 def main():
-    getPortfolio()
+    positions, shares = getPortfolio()
     if (len(positions) < 1):
         print("No positions given")
     else:
         # prompt user for risk free rate
         rf = float(input('What is the current risk free rate? ')) / 100
-        if (len(positions) == 1):
-            portfolioCalculation(positions, shares, rf)
-        else:
-            portfolioCalculation(positions, shares, rf)
+        portfolioCalculation(positions, shares, rf)
 
 """
 Prompt user for positions in portfolio and number of shares of each position.
 """
 def getPortfolio():
+    positions = np.array([])
+    shares = np.array([])
     # prompt user for ticker
     ticker = input('What Equity\'s price would you like to simulate? '
                     'or \'quit\' to stop: ')
@@ -44,13 +40,14 @@ def getPortfolio():
         share_count = int(input('How many Shares of this equity? '))
 
         # add ticker to positions and number of shares to shares
-        positions.append(ticker)
-        shares.append(share_count)
+        positions = np.append(positions, ticker)
+        shares = np.append(shares, share_count)
         
         # re-prompt user for next ticker
         ticker = input('What Equity\'s price would you like to simulate? '
                     'or \'quit\' to stop: ')
-
+        
+    return positions, shares
 
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
@@ -63,7 +60,6 @@ dt = time delta
 z = random shock
 """
 def GBMCalculation(ticker, rf):
-
     # preparing inputs needed for calculation
     s = yf.Ticker(ticker).history(period="1d")["Close"].iloc[-1]
     dt = 1 / TRADING_DAYS
@@ -72,7 +68,7 @@ def GBMCalculation(ticker, rf):
     z = np.random.normal(0, 1)
 
     # calculating possible future price
-    price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * math.sqrt(dt) * z))
+    price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * np.sqrt(dt) * z))
     return price
 
 """
@@ -106,7 +102,7 @@ def volatilityCalculation(ticker):
                                  / historical_price_data.shift(1))
     cleaned_returns = logarithmic_returns.dropna()
     daily_volatility = cleaned_returns.std()
-    sig = daily_volatility * math.sqrt(TRADING_DAYS)
+    sig = daily_volatility * np.sqrt(TRADING_DAYS)
     return sig
 
 """
