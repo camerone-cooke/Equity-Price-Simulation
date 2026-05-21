@@ -58,7 +58,7 @@ s = current price of equity
 mu = expected return
 sig = volatility
 dt = time delta
-z = random shock
+correlated_z = correlated random shock
 """
 def GBMCalculation(positions, rf):
     # preparing inputs needed for calculation
@@ -74,13 +74,18 @@ def GBMCalculation(positions, rf):
         mu = np.append(mu, float(expectedReturnCalculation(positions[index], rf)))
         sig = np.append(sig, volatilityCalculation(positions[index]))
     
-    z = np.random.normal(0, 1)
+    corr_matrix = correlationCalculation(positions)
+    cov_matrix = np.outer(sig, sig) * corr_matrix
+    l = np.linalg.cholesky(cov_matrix)
+
+    z = np.random.normal(size=len(positions))
+    correlated_z = l @ z
 
     # calculate possible future price(s)
     future_prices = np.array([])
     for index in range(0, len(positions)):
         drift = s[index] * np.exp((mu[index] - (0.5 * (sig[index] ** 2))) * dt)
-        diffusion = (sig[index] * np.sqrt(dt) * z)
+        diffusion = (sig[index] * np.sqrt(dt) * correlated_z[index])
         next_price = drift + diffusion
         future_prices = np.append(future_prices,  next_price)
 
