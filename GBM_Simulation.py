@@ -51,17 +51,9 @@ def getPortfolio():
     return positions, shares
 
 """
-Geometric Brownian Motion (GBM) is calculated using the formula:
-price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * np.sqrt(dt) * z))
-Where: 
-s = current price of equity
-mu = expected return
-sig = volatility
-dt = time delta
-correlated_z = correlated random shock
+This function calculates all needed inputs for GBM calculation.
 """
-def GBMCalculation(positions, rf):
-    # preparing inputs needed for calculation
+def GBMInputs(positions, rf):
     dt = 1 / TRADING_DAYS
 
     s = np.array([])
@@ -80,6 +72,20 @@ def GBMCalculation(positions, rf):
 
     z = np.random.normal(size=len(positions))
     correlated_z = l @ z
+    return s, mu, sig, correlated_z, dt
+
+"""
+Geometric Brownian Motion (GBM) is calculated using the formula:
+price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * np.sqrt(dt) * z))
+Where: 
+s = current price of equity
+mu = expected return
+sig = volatility
+dt = time delta
+correlated_z = correlated random shock
+"""
+def GBMCalculation(positions, rf):
+    s, mu, sig, correlated_z, dt = GBMInputs(positions, rf)
 
     # calculate possible future price(s)
     future_prices = np.array([])
