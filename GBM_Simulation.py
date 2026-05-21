@@ -11,6 +11,7 @@ iterations. The results are then displayed in a graphical format.
 # import needed libraries
 import yfinance as yf
 import numpy as np
+import pandas as pd
 
 TRADING_DAYS = 252
 
@@ -118,6 +119,23 @@ def volatilityCalculation(ticker):
     daily_volatility = cleaned_returns.std()
     sig = daily_volatility * np.sqrt(TRADING_DAYS)
     return sig
+
+"""
+Correlation measures the degree to which two equities move in lock-step with one
+another. Their correlation value can range from -1.0 (inversely correlated) to
+1.0 (positively correlated). The correlation matrix is calculated by taking
+logarithmic returns of each equity in the portfolio and computing the pairwise
+correlation coefficients between all equity pairs.
+"""
+def correlationCalculation(positions):
+    historical_price_data = pd.DataFrame()
+    for index in range(0, len(positions)):
+        historical_price_data[positions[index]] = yf.Ticker(positions[index]).history(period='1y')['Close']
+    logarithmic_returns = np.log(historical_price_data 
+                                 / historical_price_data.shift(1))
+    cleaned_returns = logarithmic_returns.dropna()
+    corr_matrix = np.array(cleaned_returns.corr())
+    return corr_matrix
 
 """
 Calculates total value of portfolio before and after simulation of individual
