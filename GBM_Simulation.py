@@ -26,7 +26,7 @@ def main():
     else:
         # prompt user for risk free rate
         rf = float(input('What is the current risk free rate? ')) / 100
-        portfolioCalculation(positions, shares, rf)
+        portfolioDisplay(positions, shares, rf)
 
 """
 Prompt user for positions in portfolio and number of shares of each position.
@@ -172,28 +172,18 @@ def monteCarloSimulation(positions, shares, rf):
     return portfolio_path
 
 """
-Calculates total value of portfolio before and after simulation of individual
-equities. Also calculates the percent change in total portfolio value. Prints 
-results to console.
+Displays metrics in terminal.
 """
-def portfolioCalculation(positions, shares, rf):
-    portfolio_value_before_simulation = 0
-    for index in range(0, len(positions)):
-        price = yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1]
-        total_equity_allocation_value = price * shares[index]
-        portfolio_value_before_simulation += total_equity_allocation_value
+def portfolioDisplay(positions, shares, rf):
+    portfolio_paths = monteCarloSimulation(positions, shares, rf)
+    portfolio_value_before_simulation = portfolio_paths[0, 0]
+    average_portfolio_value_after_simulation = np.mean(portfolio_paths[:, -1])
 
-    portfolio_value_after_simulation = 0
-    simulated_prices = GBMCalculation(positions, rf)
-    for index in range(0, len(positions)):
-        total_equity_allocation_value = simulated_prices[index] * shares[index]
-        portfolio_value_after_simulation += total_equity_allocation_value
-
-    percent_change = ((portfolio_value_after_simulation 
+    percent_change = ((average_portfolio_value_after_simulation 
                       / portfolio_value_before_simulation) - 1) * 100
 
     print("Portfolio before: %.2f" % (portfolio_value_before_simulation))
-    print("Portfolio after: %.2f" % (portfolio_value_after_simulation))
+    print("Average Portfolio after: %.2f" % (average_portfolio_value_after_simulation))
     print("Change percent: %.2f%%" % (percent_change))
 
 
