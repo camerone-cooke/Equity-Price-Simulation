@@ -199,8 +199,18 @@ def portfolioDisplay(portfolio_paths):
     fig, axs = plt.subplots(1, 2, figsize=(12, 5))
 
     # left plot showing simulation of prices
+    q1TimeSeries = np.zeros((1, TRADING_DAYS))
+    meanTimeSeries = np.zeros((1, TRADING_DAYS))
+    q3TimeSeries = np.zeros((1, TRADING_DAYS))
+    for step in range(0, TRADING_DAYS):
+        q1TimeSeries[0, step] = np.percentile(portfolio_paths[:, step], 25)
+        meanTimeSeries[0, step] = np.mean(portfolio_paths[:, step])
+        q3TimeSeries[0, step] = np.percentile(portfolio_paths[:, step], 75)
     for iteration in range(0, SIMULATIONS):
         axs[0].plot(portfolio_paths[iteration], alpha=0.5)
+        axs[0].plot(q1TimeSeries[0], alpha=0.75, color="black")
+        axs[0].plot(meanTimeSeries[0], alpha=0.75, color="black")
+        axs[0].plot(q3TimeSeries[0], alpha=0.75, color="black")
     axs[0].set_title("GBM Simulated Portfolio Price Paths")
     axs[0].set_xlabel("Time Step (Trading Day)")
     axs[0].set_ylabel("Portfolio Value ($)")
@@ -211,6 +221,8 @@ def portfolioDisplay(portfolio_paths):
     axs[1].set_title("Distribution of Final Portfolio Values")
     axs[1].set_xlabel("Final Portfolio Value ($)")
     axs[1].set_ylabel("Frequency")
+    axs[1].axvline(portfolio_paths[0, 0], color="#001F5B", 
+                   linestyle="dashed", linewidth=1.5)
 
     plt.tight_layout()
     plt.show()
