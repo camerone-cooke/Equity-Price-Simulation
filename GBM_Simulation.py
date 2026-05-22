@@ -28,8 +28,8 @@ def main():
     else:
         # prompt user for risk free rate
         rf = float(input('What is the current risk free rate? ')) / 100
-        portfolio_paths = monteCarloSimulation(positions, shares, rf)
-        portfolioDisplay(portfolio_paths)
+        mu, sig, portfolio_paths = monteCarloSimulation(positions, shares, rf)
+        portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths)
 
 """
 Prompt user for positions in portfolio and number of shares of each position.
@@ -168,13 +168,13 @@ simulated trading day.
 """
 def monteCarloSimulation(positions, shares, rf):
     s, mu, sig, l, dt = GBMInputs(positions, rf)
-    portfolio_path = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
+    portfolio_paths = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
     for iteration in range(0, SIMULATIONS):
         z = np.random.normal(size=(len(positions), TRADING_DAYS))
         correlated_z = l @ z
         price_paths = np.zeros((len(positions), TRADING_DAYS + 1))
         price_paths[:, 0] = s
-        portfolio_path[iteration, 0] = np.sum(s * shares)
+        portfolio_paths[iteration, 0] = np.sum(s * shares)
         for step in range(1, TRADING_DAYS + 1):
             price_paths[:, step] = GBMCalculation(positions, 
                                                     price_paths[:, step - 1], 
@@ -182,9 +182,8 @@ def monteCarloSimulation(positions, shares, rf):
                                                     sig, 
                                                     correlated_z[:, step - 1], 
                                                     dt)
-            portfolio_path[iteration, step] = np.sum(price_paths[:, step] * shares)
-        
-    return portfolio_path
+            portfolio_paths[iteration, step] = np.sum(price_paths[:, step] * shares)
+    return mu, sig, portfolio_paths
 
 """
 This function calculates the sharpe value of the portfolio.
@@ -228,7 +227,7 @@ def sortinoCalculation(mu, rf, positions, shares, portfolio_paths):
 """
 This function calculates metrics to be included in final output.
 """
-def portfolioMetrics(portfolio_paths):
+def portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths):
     portfolio_value_before_simulation = portfolio_paths[0, 0]
     final_prices = portfolio_paths[:, -1]
     average_portfolio_value_after_simulation = np.mean(final_prices)
@@ -236,15 +235,42 @@ def portfolioMetrics(portfolio_paths):
     percent_change = ((average_portfolio_value_after_simulation 
                       / portfolio_value_before_simulation) - 1) * 100
     value_at_risk = np.percentile(final_prices, 5)
-    probability_of_loss = np.mean(final_prices < portfolio_value_before_simulation)
+    probability_of_loss = np.mean(final_prices < portfolio_value_before_simulation) * 100
+    portfolio_sharpe = sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths)
+    portfolio_sortino = sortinoCalculation(mu, rf, positions, shares, portfolio_paths)
+    return {
+        'value_before': portfolio_value_before_simulation,
+        'average_value': average_portfolio_value_after_simulation,
+        'median_value': median_portfolio_value_after_simulation,
+        'percent_change': percent_change,
+        'value_at_risk': value_at_risk,
+        'probability_of_loss': probability_of_loss,
+        'sharpe': portfolio_sharpe,
+        'sortino': portfolio_sortino
+    }
 
 """
 This function generates the graphical display of the portfolio.
 """
-def portfolioDisplay(portfolio_paths):
+def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
     # calculate metrics to be displayed
-    metrics = portfolioMetrics(portfolio_paths)
+    metrics = portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths)
     
+    # output metrics to terminal
+    print('\nPortfolio Results')
+    print('----------------------------------')
+    print('Starting Value: $%.2f' % (metrics['value_before']))
+    print('Average Projected Value: $%.2f' % (metrics['average_value']))
+    print('Median Projected Value: $%.2f' % (metrics['median_value']))
+    print('Percent Change: ' + 
+          ('+%.2f%%' if metrics['percent_change'] > 0 else '-%.2f%%') 
+          % (metrics['percent_change']))
+    print('VaR (95%%): $%.2f' % (metrics['value_at_risk']))
+    print('Probability of Loss: %.2f%%' % (metrics['probability_of_loss']))
+    print('Sharpe Ratio: %.2f' % (metrics['sharpe']))
+    print('Sortino Ratio: %.2f' % (metrics['sortino']))
+    print('----------------------------------')
+
     # set up display for plotting side by side
     fig, axs = plt.subplots(1, 2, figsize=(12, 5))
 
@@ -273,6 +299,7 @@ def portfolioDisplay(portfolio_paths):
     axs[1].set_ylabel("Frequency")
     axs[1].axvline(portfolio_paths[0, 0], color="#001F5B", 
                    linestyle="dashed", linewidth=1.5)
+    axs[1].axvline(metrics['value_at_risk'], color="black", linewidth=1.5)
 
     plt.tight_layout()
     plt.show()
