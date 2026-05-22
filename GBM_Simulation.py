@@ -26,7 +26,7 @@ def main():
     else:
         # prompt user for risk free rate
         rf = float(input('What is the current risk free rate? ')) / 100
-        portfolioDisplay(positions, shares, rf)
+        portfolio_paths = monteCarloSimulation(positions, shares, rf)
 
 """
 Prompt user for positions in portfolio and number of shares of each position.
@@ -172,20 +172,17 @@ def monteCarloSimulation(positions, shares, rf):
     return portfolio_path
 
 """
-Displays metrics in terminal.
+This function calculates metrics to be included in final output
 """
-def portfolioDisplay(positions, shares, rf):
-    portfolio_paths = monteCarloSimulation(positions, shares, rf)
+def portfolioMetrics(portfolio_paths):
     portfolio_value_before_simulation = portfolio_paths[0, 0]
-    average_portfolio_value_after_simulation = np.mean(portfolio_paths[:, -1])
-
+    final_prices = portfolio_paths[:, -1]
+    average_portfolio_value_after_simulation = np.mean(final_prices)
+    median_portfolio_value_after_simulation = np.median(final_prices)
     percent_change = ((average_portfolio_value_after_simulation 
                       / portfolio_value_before_simulation) - 1) * 100
-
-    print("Portfolio before: %.2f" % (portfolio_value_before_simulation))
-    print("Average Portfolio after: %.2f" % (average_portfolio_value_after_simulation))
-    print("Change percent: %.2f%%" % (percent_change))
-
+    value_at_risk = np.percentile(final_prices, 5)
+    probability_of_loss = np.mean(final_prices < portfolio_value_before_simulation)
 
 if __name__=="__main__":
     main()
