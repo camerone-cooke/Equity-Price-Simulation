@@ -26,9 +26,7 @@ def main():
     if (len(positions) < 1):
         print("No positions given")
     else:
-        # prompt user for risk free rate
-        rf = float(input('What is the current risk free rate? ')) / 100
-        mu, sig, portfolio_paths = monteCarloSimulation(positions, shares, rf)
+        mu, sig, rf, portfolio_paths = monteCarloSimulation(positions, shares)
         portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths)
 
 """
@@ -42,7 +40,7 @@ def getPortfolio():
                     'or \'quit\' to stop: ')
     while (ticker != "quit"):
         # prompt user for number of shares of equity
-        share_count = int(input('How many Shares of this equity? '))
+        share_count = float(input('How many Shares of this equity? '))
 
         # add ticker to positions and number of shares to shares
         positions = np.append(positions, ticker)
@@ -71,8 +69,9 @@ def portfolioWeightingCalculation(positions, shares, portfolio_paths):
 """
 This function calculates all needed inputs for GBM calculation.
 """
-def GBMInputs(positions, rf):
+def GBMInputs(positions):
     dt = 1 / TRADING_DAYS
+    rf = (yf.Ticker('^TNX').history(period='1d')['Close'].iloc[-1]) / 100
 
     s = np.array([])
     mu = np.array([])
@@ -87,7 +86,7 @@ def GBMInputs(positions, rf):
     corr_matrix = correlationCalculation(positions)
     cov_matrix = np.outer(sig, sig) * corr_matrix
     l = np.linalg.cholesky(cov_matrix)
-    return s, mu, sig, l, dt
+    return s, mu, sig, rf, l, dt
 
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
@@ -168,8 +167,8 @@ price as the starting price. The price path generated for each equity is
 adjusted to account for share counts and summed to get portfolio value for each 
 simulated trading day.
 """
-def monteCarloSimulation(positions, shares, rf):
-    s, mu, sig, l, dt = GBMInputs(positions, rf)
+def monteCarloSimulation(positions, shares):
+    s, mu, sig, rf, l, dt = GBMInputs(positions)
     portfolio_paths = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
     for iteration in range(0, SIMULATIONS):
         z = np.random.normal(size=(len(positions), TRADING_DAYS))
@@ -185,7 +184,7 @@ def monteCarloSimulation(positions, shares, rf):
                                                     correlated_z[:, step - 1], 
                                                     dt)
             portfolio_paths[iteration, step] = np.sum(price_paths[:, step] * shares)
-    return mu, sig, portfolio_paths
+    return mu, sig, rf, portfolio_paths
 
 """
 This function calculates the sharpe value of the portfolio. The sharpe value is
