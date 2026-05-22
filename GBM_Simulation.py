@@ -12,6 +12,8 @@ iterations. The results are then displayed in a graphical format.
 import yfinance as yf
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 TRADING_DAYS = 252
 SIMULATIONS = 10000
@@ -27,6 +29,7 @@ def main():
         # prompt user for risk free rate
         rf = float(input('What is the current risk free rate? ')) / 100
         portfolio_paths = monteCarloSimulation(positions, shares, rf)
+        portfolioDisplay(portfolio_paths)
 
 """
 Prompt user for positions in portfolio and number of shares of each position.
@@ -172,7 +175,7 @@ def monteCarloSimulation(positions, shares, rf):
     return portfolio_path
 
 """
-This function calculates metrics to be included in final output
+This function calculates metrics to be included in final output.
 """
 def portfolioMetrics(portfolio_paths):
     portfolio_value_before_simulation = portfolio_paths[0, 0]
@@ -183,6 +186,35 @@ def portfolioMetrics(portfolio_paths):
                       / portfolio_value_before_simulation) - 1) * 100
     value_at_risk = np.percentile(final_prices, 5)
     probability_of_loss = np.mean(final_prices < portfolio_value_before_simulation)
+
+
+"""
+This function generates the graphical display of the portfolio.
+"""
+def portfolioDisplay(portfolio_paths):
+    # calculate metrics to be displayed
+    metrics = portfolioMetrics(portfolio_paths)
+    
+    # set up display for plotting side by side
+    fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+
+    # left plot showing simulation of prices
+    for iteration in range(0, SIMULATIONS):
+        axs[0].plot(portfolio_paths[iteration], alpha=0.5)
+    axs[0].set_title("GBM Simulated Portfolio Price Paths")
+    axs[0].set_xlabel("Time Step (Trading Day)")
+    axs[0].set_ylabel("Portfolio Value ($)")
+
+    # right plot showing distribution of prices
+    final_prices = portfolio_paths[:, -1]
+    sns.histplot(final_prices, bins = 100, kde=True, edgecolor = "black")
+    axs[1].set_title("Distribution of Final Portfolio Values")
+    axs[1].set_xlabel("Final Portfolio Value ($)")
+    axs[1].set_ylabel("Frequency")
+
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__=="__main__":
     main()
