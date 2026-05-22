@@ -175,6 +175,20 @@ def monteCarloSimulation(positions, shares, rf):
     return portfolio_path
 
 """
+This function calculates the sharpe value of the portfolio.
+"""
+def sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths):
+    sharpes = ((mu - rf) / sig)
+    portfolio_value = portfolio_paths[0, 0]
+    prices = np.array([])
+    for index in range(0, len(positions)):
+        prices = np.append(prices, 
+                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
+    weights = (prices * shares) / portfolio_value
+    weighted_sharpe = np.dot(sharpes, weights)
+    return weighted_sharpe
+
+"""
 This function calculates metrics to be included in final output.
 """
 def portfolioMetrics(portfolio_paths):
