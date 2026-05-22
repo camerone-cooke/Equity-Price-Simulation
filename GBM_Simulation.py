@@ -55,6 +55,18 @@ def getPortfolio():
     return positions, shares
 
 """
+This function calculates the weighting of each position in the portfolio.
+"""
+def portfolioWeightingCalculation(positions, shares, portfolio_paths):
+    portfolio_value = portfolio_paths[0, 0]
+    prices = np.array([])
+    for index in range(0, len(positions)):
+        prices = np.append(prices, 
+                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
+    weights = (prices * shares) / portfolio_value
+    return weights
+
+"""
 This function calculates all needed inputs for GBM calculation.
 """
 def GBMInputs(positions, rf):
@@ -179,12 +191,7 @@ This function calculates the sharpe value of the portfolio.
 """
 def sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths):
     sharpes = ((mu - rf) / sig)
-    portfolio_value = portfolio_paths[0, 0]
-    prices = np.array([])
-    for index in range(0, len(positions)):
-        prices = np.append(prices, 
-                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
-    weights = (prices * shares) / portfolio_value
+    weights = portfolioWeightingCalculation(positions, shares, portfolio_paths)
     weighted_sharpe = np.dot(sharpes, weights)
     return weighted_sharpe
 
@@ -214,12 +221,7 @@ def sortinoCalculation(mu, rf, positions, shares, portfolio_paths):
         downside_deviations = np.append(downside_deviations, 
                                         downsideDeviationCalculation(equity, rf))
     sortinos = (mu - rf) / downside_deviations
-    portfolio_value = portfolio_paths[0, 0]
-    prices = np.array([])
-    for index in range(0, len(positions)):
-        prices = np.append(prices, 
-                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
-    weights = (prices * shares) / portfolio_value
+    weights = portfolioWeightingCalculation(positions, shares, portfolio_paths)
     weighted_sortino = np.dot(sortinos, weights)
     return weighted_sortino
 
@@ -235,7 +237,6 @@ def portfolioMetrics(portfolio_paths):
                       / portfolio_value_before_simulation) - 1) * 100
     value_at_risk = np.percentile(final_prices, 5)
     probability_of_loss = np.mean(final_prices < portfolio_value_before_simulation)
-
 
 """
 This function generates the graphical display of the portfolio.
