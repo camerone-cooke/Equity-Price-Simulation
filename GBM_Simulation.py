@@ -12,6 +12,8 @@ iterations. The results are then displayed in a graphical format.
 import yfinance as yf
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 TRADING_DAYS = 252
 SIMULATIONS = 10000
@@ -26,7 +28,8 @@ def main():
     else:
         # prompt user for risk free rate
         rf = float(input('What is the current risk free rate? ')) / 100
-        portfolioDisplay(positions, shares, rf)
+        mu, sig, portfolio_paths = monteCarloSimulation(positions, shares, rf)
+        portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths)
 
 """
 Prompt user for positions in portfolio and number of shares of each position.
@@ -50,6 +53,20 @@ def getPortfolio():
                     'or \'quit\' to stop: ')
         
     return positions, shares
+
+"""
+This function calculates the weighting of each position in the portfolio. The
+weight of each position is determined by calculating the total value of that
+position (price * shares) and then dividing by the total value of the portfolio.
+"""
+def portfolioWeightingCalculation(positions, shares, portfolio_paths):
+    portfolio_value = portfolio_paths[0, 0]
+    prices = np.array([])
+    for index in range(0, len(positions)):
+        prices = np.append(prices, 
+                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
+    weights = (prices * shares) / portfolio_value
+    return weights
 
 """
 This function calculates all needed inputs for GBM calculation.
@@ -153,13 +170,13 @@ simulated trading day.
 """
 def monteCarloSimulation(positions, shares, rf):
     s, mu, sig, l, dt = GBMInputs(positions, rf)
-    portfolio_path = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
+    portfolio_paths = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
     for iteration in range(0, SIMULATIONS):
         z = np.random.normal(size=(len(positions), TRADING_DAYS))
         correlated_z = l @ z
         price_paths = np.zeros((len(positions), TRADING_DAYS + 1))
         price_paths[:, 0] = s
-        portfolio_path[iteration, 0] = np.sum(s * shares)
+        portfolio_paths[iteration, 0] = np.sum(s * shares)
         for step in range(1, TRADING_DAYS + 1):
             price_paths[:, step] = GBMCalculation(positions, 
                                                     price_paths[:, step - 1], 
@@ -167,24 +184,154 @@ def monteCarloSimulation(positions, shares, rf):
                                                     sig, 
                                                     correlated_z[:, step - 1], 
                                                     dt)
-            portfolio_path[iteration, step] = np.sum(price_paths[:, step] * shares)
-        
-    return portfolio_path
+            portfolio_paths[iteration, step] = np.sum(price_paths[:, step] * shares)
+    return mu, sig, portfolio_paths
 
 """
-Displays metrics in terminal.
+This function calculates the sharpe value of the portfolio. The sharpe value is
+calculated by determining the sharpe of each equity position using:
+sharpe = ((mu - rf) / sig)
+where:
+mu = expected return
+rf = risk free rate
+sig = volatility
+The sharpe of each equity is then multiplied by its respective equity's weight
+in the portfolio. The weighted sharpes are then summmed to get the portfolio sharpe.
 """
-def portfolioDisplay(positions, shares, rf):
-    portfolio_paths = monteCarloSimulation(positions, shares, rf)
+def sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths):
+    sharpes = ((mu - rf) / sig)
+    weights = portfolioWeightingCalculation(positions, shares, portfolio_paths)
+    weighted_sharpe = np.dot(sharpes, weights)
+    return weighted_sharpe
+
+"""
+This function calculates the downside deviation of returns. Downside deviation
+of returns is the standard deviation of negative returns. Negative here defined 
+as any return less than the daily risk free rate (rf / 252), therefore having a 
+negative equity risk premium. This is done by taking all days where the log 
+returns are less than the daily risk free returns and calculating their standard 
+deviation.
+"""
+def downsideDeviationCalculation(ticker, rf):
+    rfDaily = rf/252
+    historical_price_data = yf.Ticker(ticker).history(period='1y')['Close']
+    logarithmic_returns = np.log(historical_price_data 
+                                 / historical_price_data.shift(1))
+    cleaned_returns = logarithmic_returns.dropna()
+    downside_returns = np.array([])
+    for step in cleaned_returns:
+        if (step < rfDaily):
+            downside_returns = np.append(downside_returns, step)
+    downside_volatility = downside_returns.std()
+    annualized_downside = downside_volatility * np.sqrt(TRADING_DAYS)
+    return annualized_downside
+
+"""
+This function calculates the sortino value of the portfolio. The sortino value is
+calculated by determining the sortino of each equity position using:
+sortino = ((mu - rf) / downside_deviation)
+where:
+mu = expected return
+rf = risk free rate
+downside_deviation = standard deviation of negative returns
+The sortino of each equity is then multiplied by its respective equity's weight
+in the portfolio. The weighted sortinos are then summmed to get the portfolio sortino.
+"""
+def sortinoCalculation(mu, rf, positions, shares, portfolio_paths):
+    downside_deviations = np.array([])
+    for equity in positions:
+        downside_deviations = np.append(downside_deviations, 
+                                        downsideDeviationCalculation(equity, rf))
+    sortinos = (mu - rf) / downside_deviations
+    weights = portfolioWeightingCalculation(positions, shares, portfolio_paths)
+    weighted_sortino = np.dot(sortinos, weights)
+    return weighted_sortino
+
+"""
+This function calculates important metrics to be included in the final output. 
+Here Value at Risk (VaR) and probability of loss are calculated. VaR (95%) 
+represents the minimum loss expected in the worst 5% of simulated outcomes. 
+Probability of loss is the percentage of simulations that resulted in a final 
+portfolio value which was below the starting portfolio value, indicating an 
+overall loss after the simulation.
+"""
+def portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths):
     portfolio_value_before_simulation = portfolio_paths[0, 0]
-    average_portfolio_value_after_simulation = np.mean(portfolio_paths[:, -1])
-
+    final_prices = portfolio_paths[:, -1]
+    average_portfolio_value_after_simulation = np.mean(final_prices)
+    median_portfolio_value_after_simulation = np.median(final_prices)
     percent_change = ((average_portfolio_value_after_simulation 
                       / portfolio_value_before_simulation) - 1) * 100
+    value_at_risk = np.percentile(final_prices, 5)
+    probability_of_loss = np.mean(final_prices < portfolio_value_before_simulation) * 100
+    portfolio_sharpe = sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths)
+    portfolio_sortino = sortinoCalculation(mu, rf, positions, shares, portfolio_paths)
+    return {
+        'value_before': portfolio_value_before_simulation,
+        'average_value': average_portfolio_value_after_simulation,
+        'median_value': median_portfolio_value_after_simulation,
+        'percent_change': percent_change,
+        'value_at_risk': value_at_risk,
+        'probability_of_loss': probability_of_loss,
+        'sharpe': portfolio_sharpe,
+        'sortino': portfolio_sortino
+    }
 
-    print("Portfolio before: %.2f" % (portfolio_value_before_simulation))
-    print("Average Portfolio after: %.2f" % (average_portfolio_value_after_simulation))
-    print("Change percent: %.2f%%" % (percent_change))
+"""
+This function generates the graphical display of the portfolio and outputs
+portfolio metrics to the terminal.
+"""
+def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
+    # calculate metrics to be displayed
+    metrics = portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths)
+    
+    # output metrics to terminal
+    print('\nPortfolio Results')
+    print('----------------------------------')
+    print('Starting Value: $%.2f' % (metrics['value_before']))
+    print('Average Projected Value: $%.2f' % (metrics['average_value']))
+    print('Median Projected Value: $%.2f' % (metrics['median_value']))
+    print('Percent Change: ' + 
+          ('+%.2f%%' if metrics['percent_change'] > 0 else '-%.2f%%') 
+          % (metrics['percent_change']))
+    print('VaR (95%%): $%.2f' % (metrics['value_at_risk']))
+    print('Probability of Loss: %.2f%%' % (metrics['probability_of_loss']))
+    print('Sharpe Ratio: %.2f' % (metrics['sharpe']))
+    print('Sortino Ratio: %.2f' % (metrics['sortino']))
+    print('----------------------------------')
+
+    # set up display for plotting side by side
+    fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+
+    # left plot showing simulation of prices
+    q1TimeSeries = np.zeros((1, TRADING_DAYS + 1))
+    meanTimeSeries = np.zeros((1, TRADING_DAYS + 1))
+    q3TimeSeries = np.zeros((1, TRADING_DAYS + 1))
+    for step in range(0, TRADING_DAYS + 1):
+        q1TimeSeries[0, step] = np.percentile(portfolio_paths[:, step], 25)
+        meanTimeSeries[0, step] = np.mean(portfolio_paths[:, step])
+        q3TimeSeries[0, step] = np.percentile(portfolio_paths[:, step], 75)
+    for iteration in range(0, SIMULATIONS):
+        axs[0].plot(portfolio_paths[iteration], alpha=0.5)
+    axs[0].plot(q1TimeSeries[0], alpha=0.75, color="black")
+    axs[0].plot(meanTimeSeries[0], alpha=0.75, color="black")
+    axs[0].plot(q3TimeSeries[0], alpha=0.75, color="black")
+    axs[0].set_title("GBM Simulated Portfolio Price Paths")
+    axs[0].set_xlabel("Time Step (Trading Day)")
+    axs[0].set_ylabel("Portfolio Value ($)")
+
+    # right plot showing distribution of prices
+    final_prices = portfolio_paths[:, -1]
+    sns.histplot(final_prices, ax=axs[1], bins = 100, kde=True, edgecolor = "black")
+    axs[1].set_title("Distribution of Final Portfolio Values")
+    axs[1].set_xlabel("Final Portfolio Value ($)")
+    axs[1].set_ylabel("Frequency")
+    axs[1].axvline(portfolio_paths[0, 0], color="#001F5B", 
+                   linestyle="dashed", linewidth=1.5)
+    axs[1].axvline(metrics['value_at_risk'], color="black", linewidth=1.5)
+
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__=="__main__":
