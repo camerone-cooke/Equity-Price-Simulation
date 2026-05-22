@@ -189,6 +189,41 @@ def sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths):
     return weighted_sharpe
 
 """
+This function calculates the downside deviation of returns.
+"""
+def downsideDeviationCalculation(ticker, rf):
+    rfDaily = rf/252
+    historical_price_data = yf.Ticker(ticker).history(period='1y')['Close']
+    logarithmic_returns = np.log(historical_price_data 
+                                 / historical_price_data.shift(1))
+    cleaned_returns = logarithmic_returns.dropna()
+    downside_returns = np.array([])
+    for step in cleaned_returns:
+        if (step < rfDaily):
+            downside_returns = np.append(downside_returns, step)
+    downside_volatility = downside_returns.std()
+    annualized_downside = downside_volatility * np.sqrt(TRADING_DAYS)
+    return annualized_downside
+
+"""
+This function calculates the sortino value of the portfolio.
+"""
+def sortinoCalculation(mu, rf, positions, shares, portfolio_paths):
+    downside_deviations = np.array([])
+    for equity in positions:
+        downside_deviations = np.append(downside_deviations, 
+                                        downsideDeviationCalculation(equity, rf))
+    sortinos = (mu - rf) / downside_deviations
+    portfolio_value = portfolio_paths[0, 0]
+    prices = np.array([])
+    for index in range(0, len(positions)):
+        prices = np.append(prices, 
+                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
+    weights = (prices * shares) / portfolio_value
+    weighted_sortino = np.dot(sortinos, weights)
+    return weighted_sortino
+
+"""
 This function calculates metrics to be included in final output.
 """
 def portfolioMetrics(portfolio_paths):
