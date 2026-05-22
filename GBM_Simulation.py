@@ -55,7 +55,9 @@ def getPortfolio():
     return positions, shares
 
 """
-This function calculates the weighting of each position in the portfolio.
+This function calculates the weighting of each position in the portfolio. The
+weight of each position is determined by calculating the total value of that
+position (price * shares) and then dividing by the total value of the portfolio.
 """
 def portfolioWeightingCalculation(positions, shares, portfolio_paths):
     portfolio_value = portfolio_paths[0, 0]
@@ -186,7 +188,15 @@ def monteCarloSimulation(positions, shares, rf):
     return mu, sig, portfolio_paths
 
 """
-This function calculates the sharpe value of the portfolio.
+This function calculates the sharpe value of the portfolio. The sharpe value is
+calculated by determining the sharpe of each equity position using:
+sharpe = ((mu - rf) / sig)
+where:
+mu = expected return
+rf = risk free rate
+sig = volatility
+The sharpe of each equity is then multiplied by its respective equity's weight
+in the portfolio. The weighted sharpes are then summmed to get the portfolio sharpe.
 """
 def sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths):
     sharpes = ((mu - rf) / sig)
@@ -195,7 +205,12 @@ def sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths):
     return weighted_sharpe
 
 """
-This function calculates the downside deviation of returns.
+This function calculates the downside deviation of returns. Downside deviation
+of returns is the standard deviation of negative returns. Negative here defined 
+as any return less than the daily risk free rate (rf / 252), therefore having a 
+negative equity risk premium. This is done by taking all days where the log 
+returns are less than the daily risk free returns and calculating their standard 
+deviation.
 """
 def downsideDeviationCalculation(ticker, rf):
     rfDaily = rf/252
@@ -212,7 +227,15 @@ def downsideDeviationCalculation(ticker, rf):
     return annualized_downside
 
 """
-This function calculates the sortino value of the portfolio.
+This function calculates the sortino value of the portfolio. The sortino value is
+calculated by determining the sortino of each equity position using:
+sortino = ((mu - rf) / downside_deviation)
+where:
+mu = expected return
+rf = risk free rate
+downside_deviation = standard deviation of negative returns
+The sortino of each equity is then multiplied by its respective equity's weight
+in the portfolio. The weighted sortinos are then summmed to get the portfolio sortino.
 """
 def sortinoCalculation(mu, rf, positions, shares, portfolio_paths):
     downside_deviations = np.array([])
@@ -225,7 +248,12 @@ def sortinoCalculation(mu, rf, positions, shares, portfolio_paths):
     return weighted_sortino
 
 """
-This function calculates metrics to be included in final output.
+This function calculates important metrics to be included in the final output. 
+Here Value at Risk (VaR) and probability of loss are calculated. VaR (95%) 
+represents the minimum loss expected in the worst 5% of simulated outcomes. 
+Probability of loss is the percentage of simulations that resulted in a final 
+portfolio value which was below the starting portfolio value, indicating an 
+overall loss after the simulation.
 """
 def portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths):
     portfolio_value_before_simulation = portfolio_paths[0, 0]
@@ -250,7 +278,8 @@ def portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths):
     }
 
 """
-This function generates the graphical display of the portfolio.
+This function generates the graphical display of the portfolio and outputs
+portfolio metrics to the terminal.
 """
 def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
     # calculate metrics to be displayed
