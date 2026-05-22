@@ -3,7 +3,7 @@
 
 """
 This program utilizes Geometric Brownian Motion (GBM) to generate possible price
-paths for a selected equity. Using Monte Carlo simulation, the program generates
+paths for a portfolio. Using Monte Carlo simulation, the program generates
 numerous potential price paths by applying GBM calculation a specified number of
 iterations. The results are then displayed in a graphical format.
 """
@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 TRADING_DAYS = 252
+SIMULATIONS = 10000
 
 """
 Check if number of positions is valid and then run simulation on portfolio.
@@ -69,10 +70,7 @@ def GBMInputs(positions, rf):
     corr_matrix = correlationCalculation(positions)
     cov_matrix = np.outer(sig, sig) * corr_matrix
     l = np.linalg.cholesky(cov_matrix)
-
-    z = np.random.normal(size=len(positions))
-    correlated_z = l @ z
-    return s, mu, sig, correlated_z, dt
+    return s, mu, sig, l, dt
 
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
@@ -84,9 +82,7 @@ sig = volatility
 dt = time delta
 correlated_z = correlated random shock
 """
-def GBMCalculation(positions, rf):
-    s, mu, sig, correlated_z, dt = GBMInputs(positions, rf)
-
+def GBMCalculation(positions, s, mu, sig, correlated_z, dt):
     # calculate possible future price(s)
     future_prices = np.array([])
     for index in range(0, len(positions)):
@@ -147,6 +143,33 @@ def correlationCalculation(positions):
     cleaned_returns = logarithmic_returns.dropna()
     corr_matrix = np.array(cleaned_returns.corr())
     return corr_matrix
+
+"""
+Monte Carlo Simulation performed running GBM calculation for each trading day
+for a specified number of simulations. Each simulation uses the previous day's
+price as the starting price. The price path generated for each equity is
+adjusted to account for share counts and summed to get portfolio value for each 
+simulated trading day.
+"""
+def monteCarloSimulation(positions, shares, rf):
+    s, mu, sig, l, dt = GBMInputs(positions, rf)
+    portfolio_path = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
+    for iteration in range(0, SIMULATIONS):
+        z = np.random.normal(size=(len(positions), TRADING_DAYS))
+        correlated_z = l @ z
+        price_paths = np.zeros((len(positions), TRADING_DAYS + 1))
+        price_paths[:, 0] = s
+        portfolio_path[iteration, 0] = np.sum(s * shares)
+        for step in range(1, TRADING_DAYS + 1):
+            price_paths[:, step] = GBMCalculation(positions, 
+                                                    price_paths[:, step - 1], 
+                                                    mu, 
+                                                    sig, 
+                                                    correlated_z[:, step - 1], 
+                                                    dt)
+            portfolio_path[iteration, step] = np.sum(price_paths[:, step] * shares)
+        
+    return portfolio_path
 
 """
 Calculates total value of portfolio before and after simulation of individual
