@@ -330,8 +330,12 @@ def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
     axs[1].set_xlabel("Final Portfolio Value ($)")
     axs[1].set_ylabel("Frequency")
     axs[1].axvline(portfolio_paths[0, 0], color="#001F5B", 
-                   linestyle="dashed", linewidth=1.5)
-    axs[1].axvline(metrics['value_at_risk'], color="black", linewidth=1.5)
+                   linestyle="dashed", linewidth=1.5, 
+                   label="Initial Portfolio Value")
+    axs[1].axvline(metrics['value_at_risk'], color="black", 
+                   linewidth=1.5, label="VaR")
+
+    axs[1].legend()
 
     plt.tight_layout()
     plt.show()
