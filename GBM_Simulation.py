@@ -26,9 +26,7 @@ def main():
     if (len(positions) < 1):
         print("No positions given")
     else:
-        # prompt user for risk free rate
-        rf = float(input('What is the current risk free rate? ')) / 100
-        mu, sig, portfolio_paths = monteCarloSimulation(positions, shares, rf)
+        mu, sig, rf, portfolio_paths = monteCarloSimulation(positions, shares)
         portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths)
 
 """
@@ -39,10 +37,10 @@ def getPortfolio():
     shares = np.array([])
     # prompt user for ticker
     ticker = input('What Equity\'s price would you like to simulate? '
-                    'or \'quit\' to stop: ')
-    while (ticker != "quit"):
+                    'or \'quit\' to stop: ').upper()
+    while (ticker != "QUIT"):
         # prompt user for number of shares of equity
-        share_count = int(input('How many Shares of this equity? '))
+        share_count = float(input('How many Shares of this equity? '))
 
         # add ticker to positions and number of shares to shares
         positions = np.append(positions, ticker)
@@ -50,65 +48,9 @@ def getPortfolio():
         
         # re-prompt user for next ticker
         ticker = input('What Equity\'s price would you like to simulate? '
-                    'or \'quit\' to stop: ')
+                    'or \'quit\' to stop: ').upper()
         
     return positions, shares
-
-"""
-This function calculates the weighting of each position in the portfolio. The
-weight of each position is determined by calculating the total value of that
-position (price * shares) and then dividing by the total value of the portfolio.
-"""
-def portfolioWeightingCalculation(positions, shares, portfolio_paths):
-    portfolio_value = portfolio_paths[0, 0]
-    prices = np.array([])
-    for index in range(0, len(positions)):
-        prices = np.append(prices, 
-                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
-    weights = (prices * shares) / portfolio_value
-    return weights
-
-"""
-This function calculates all needed inputs for GBM calculation.
-"""
-def GBMInputs(positions, rf):
-    dt = 1 / TRADING_DAYS
-
-    s = np.array([])
-    mu = np.array([])
-    sig = np.array([])
-
-    for index in range(len(positions)):
-        s = np.append(s, 
-                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
-        mu = np.append(mu, float(expectedReturnCalculation(positions[index], rf)))
-        sig = np.append(sig, volatilityCalculation(positions[index]))
-    
-    corr_matrix = correlationCalculation(positions)
-    cov_matrix = np.outer(sig, sig) * corr_matrix
-    l = np.linalg.cholesky(cov_matrix)
-    return s, mu, sig, l, dt
-
-"""
-Geometric Brownian Motion (GBM) is calculated using the formula:
-price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * np.sqrt(dt) * z))
-Where: 
-s = current price of equity
-mu = expected return
-sig = volatility
-dt = time delta
-correlated_z = correlated random shock
-"""
-def GBMCalculation(positions, s, mu, sig, correlated_z, dt):
-    # calculate possible future price(s)
-    future_prices = np.array([])
-    for index in range(0, len(positions)):
-        drift = (mu[index] - (0.5 * (sig[index] ** 2))) * dt
-        diffusion = (sig[index] * np.sqrt(dt) * correlated_z[index])
-        next_price = s[index] * np.exp(drift + diffusion)
-        future_prices = np.append(future_prices,  next_price)
-
-    return future_prices
 
 """
 Expected return is utilized in GBM to calculate the drift factor and is 
@@ -162,14 +104,57 @@ def correlationCalculation(positions):
     return corr_matrix
 
 """
+This function calculates all needed inputs for GBM calculation.
+"""
+def GBMInputs(positions):
+    dt = 1 / TRADING_DAYS
+    rf = (yf.Ticker('^TNX').history(period='1d')['Close'].iloc[-1]) / 100
+
+    s = np.array([])
+    mu = np.array([])
+    sig = np.array([])
+
+    for index in range(len(positions)):
+        s = np.append(s, 
+                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
+        mu = np.append(mu, float(expectedReturnCalculation(positions[index], rf)))
+        sig = np.append(sig, volatilityCalculation(positions[index]))
+    
+    corr_matrix = correlationCalculation(positions)
+    cov_matrix = np.outer(sig, sig) * corr_matrix
+    l = np.linalg.cholesky(cov_matrix)
+    return s, mu, sig, rf, l, dt
+
+"""
+Geometric Brownian Motion (GBM) is calculated using the formula:
+price = s * np.exp(((mu - (0.5 * (sig ** 2))) * dt) + (sig * np.sqrt(dt) * z))
+Where: 
+s = current price of equity
+mu = expected return
+sig = volatility
+dt = time delta
+correlated_z = correlated random shock
+"""
+def GBMCalculation(positions, s, mu, sig, correlated_z, dt):
+    # calculate possible future price(s)
+    future_prices = np.array([])
+    for index in range(0, len(positions)):
+        drift = (mu[index] - (0.5 * (sig[index] ** 2))) * dt
+        diffusion = (sig[index] * np.sqrt(dt) * correlated_z[index])
+        next_price = s[index] * np.exp(drift + diffusion)
+        future_prices = np.append(future_prices,  next_price)
+
+    return future_prices
+
+"""
 Monte Carlo Simulation performed running GBM calculation for each trading day
 for a specified number of simulations. Each simulation uses the previous day's
 price as the starting price. The price path generated for each equity is
 adjusted to account for share counts and summed to get portfolio value for each 
 simulated trading day.
 """
-def monteCarloSimulation(positions, shares, rf):
-    s, mu, sig, l, dt = GBMInputs(positions, rf)
+def monteCarloSimulation(positions, shares):
+    s, mu, sig, rf, l, dt = GBMInputs(positions)
     portfolio_paths = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
     for iteration in range(0, SIMULATIONS):
         z = np.random.normal(size=(len(positions), TRADING_DAYS))
@@ -185,7 +170,21 @@ def monteCarloSimulation(positions, shares, rf):
                                                     correlated_z[:, step - 1], 
                                                     dt)
             portfolio_paths[iteration, step] = np.sum(price_paths[:, step] * shares)
-    return mu, sig, portfolio_paths
+    return mu, sig, rf, portfolio_paths
+
+"""
+This function calculates the weighting of each position in the portfolio. The
+weight of each position is determined by calculating the total value of that
+position (price * shares) and then dividing by the total value of the portfolio.
+"""
+def portfolioWeightingCalculation(positions, shares, portfolio_paths):
+    portfolio_value = portfolio_paths[0, 0]
+    prices = np.array([])
+    for index in range(0, len(positions)):
+        prices = np.append(prices, 
+                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
+    weights = (prices * shares) / portfolio_value
+    return weights
 
 """
 This function calculates the sharpe value of the portfolio. The sharpe value is
@@ -294,7 +293,11 @@ def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
     print('Percent Change: ' + 
           ('+%.2f%%' if metrics['percent_change'] > 0 else '-%.2f%%') 
           % (metrics['percent_change']))
-    print('VaR (95%%): $%.2f' % (metrics['value_at_risk']))
+    print('VaR (95%%): $%.2f (loss: $%.2f, %.2f%% downside)' 
+          % (metrics['value_at_risk'], 
+            (metrics['value_before'] - metrics['value_at_risk']),
+            (((metrics['value_before'] - metrics['value_at_risk']) 
+                / metrics['value_before']) * 100)))
     print('Probability of Loss: %.2f%%' % (metrics['probability_of_loss']))
     print('Sharpe Ratio: %.2f' % (metrics['sharpe']))
     print('Sortino Ratio: %.2f' % (metrics['sortino']))
@@ -313,22 +316,33 @@ def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
         q3TimeSeries[0, step] = np.percentile(portfolio_paths[:, step], 75)
     for iteration in range(0, SIMULATIONS):
         axs[0].plot(portfolio_paths[iteration], alpha=0.5)
-    axs[0].plot(q1TimeSeries[0], alpha=0.75, color="black")
-    axs[0].plot(meanTimeSeries[0], alpha=0.75, color="black")
-    axs[0].plot(q3TimeSeries[0], alpha=0.75, color="black")
+    axs[0].plot(q1TimeSeries[0], alpha=0.75, linestyle="dashed", 
+                color="black", label="Q1")
+    axs[0].plot(meanTimeSeries[0], alpha=0.75, 
+                color="black", label="Mean")
+    axs[0].plot(q3TimeSeries[0], alpha=0.75, linestyle="dashed", 
+                color="black", label="Q3")
     axs[0].set_title("GBM Simulated Portfolio Price Paths")
     axs[0].set_xlabel("Time Step (Trading Day)")
     axs[0].set_ylabel("Portfolio Value ($)")
 
+    axs[0].legend()
+
     # right plot showing distribution of prices
     final_prices = portfolio_paths[:, -1]
-    sns.histplot(final_prices, ax=axs[1], bins = 100, kde=True, edgecolor = "black")
+    sns.histplot(final_prices, ax=axs[1], bins = 100, 
+                 kde=True, edgecolor = "black")
     axs[1].set_title("Distribution of Final Portfolio Values")
     axs[1].set_xlabel("Final Portfolio Value ($)")
     axs[1].set_ylabel("Frequency")
     axs[1].axvline(portfolio_paths[0, 0], color="#001F5B", 
-                   linestyle="dashed", linewidth=1.5)
-    axs[1].axvline(metrics['value_at_risk'], color="black", linewidth=1.5)
+                   linestyle="dashed", linewidth=1.5, 
+                   label="Initial Portfolio Value")
+    axs[1].axvline(metrics['value_at_risk'], color="black", 
+                   linewidth=1.5, label="VaR (5%%) Loss: $%.2f" 
+                   % ((metrics['value_before'] - metrics['value_at_risk'])))
+
+    axs[1].legend()
 
     plt.tight_layout()
     plt.show()
