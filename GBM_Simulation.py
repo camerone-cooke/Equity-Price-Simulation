@@ -37,8 +37,8 @@ def getPortfolio():
     shares = np.array([])
     # prompt user for ticker
     ticker = input('What Equity\'s price would you like to simulate? '
-                    'or \'quit\' to stop: ')
-    while (ticker != "quit"):
+                    'or \'quit\' to stop: ').upper()
+    while (ticker != "QUIT"):
         # prompt user for number of shares of equity
         share_count = float(input('How many Shares of this equity? '))
 
@@ -48,7 +48,7 @@ def getPortfolio():
         
         # re-prompt user for next ticker
         ticker = input('What Equity\'s price would you like to simulate? '
-                    'or \'quit\' to stop: ')
+                    'or \'quit\' to stop: ').upper()
         
     return positions, shares
 
@@ -293,7 +293,11 @@ def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
     print('Percent Change: ' + 
           ('+%.2f%%' if metrics['percent_change'] > 0 else '-%.2f%%') 
           % (metrics['percent_change']))
-    print('VaR (95%%): $%.2f' % (metrics['value_at_risk']))
+    print('VaR (95%%): $%.2f (loss: $%.2f, %.2f%% downside)' 
+          % (metrics['value_at_risk'], 
+            (metrics['value_before'] - metrics['value_at_risk']),
+            (((metrics['value_before'] - metrics['value_at_risk']) 
+                / metrics['value_before']) * 100)))
     print('Probability of Loss: %.2f%%' % (metrics['probability_of_loss']))
     print('Sharpe Ratio: %.2f' % (metrics['sharpe']))
     print('Sortino Ratio: %.2f' % (metrics['sortino']))
