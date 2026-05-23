@@ -316,16 +316,22 @@ def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
         q3TimeSeries[0, step] = np.percentile(portfolio_paths[:, step], 75)
     for iteration in range(0, SIMULATIONS):
         axs[0].plot(portfolio_paths[iteration], alpha=0.5)
-    axs[0].plot(q1TimeSeries[0], alpha=0.75, color="black")
-    axs[0].plot(meanTimeSeries[0], alpha=0.75, color="black")
-    axs[0].plot(q3TimeSeries[0], alpha=0.75, color="black")
+    axs[0].plot(q1TimeSeries[0], alpha=0.75, linestyle="dashed", 
+                color="black", label="Q1")
+    axs[0].plot(meanTimeSeries[0], alpha=0.75, 
+                color="black", label="Mean")
+    axs[0].plot(q3TimeSeries[0], alpha=0.75, linestyle="dashed", 
+                color="black", label="Q3")
     axs[0].set_title("GBM Simulated Portfolio Price Paths")
     axs[0].set_xlabel("Time Step (Trading Day)")
     axs[0].set_ylabel("Portfolio Value ($)")
 
+    axs[0].legend()
+
     # right plot showing distribution of prices
     final_prices = portfolio_paths[:, -1]
-    sns.histplot(final_prices, ax=axs[1], bins = 100, kde=True, edgecolor = "black")
+    sns.histplot(final_prices, ax=axs[1], bins = 100, 
+                 kde=True, edgecolor = "black")
     axs[1].set_title("Distribution of Final Portfolio Values")
     axs[1].set_xlabel("Final Portfolio Value ($)")
     axs[1].set_ylabel("Frequency")
@@ -333,7 +339,8 @@ def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
                    linestyle="dashed", linewidth=1.5, 
                    label="Initial Portfolio Value")
     axs[1].axvline(metrics['value_at_risk'], color="black", 
-                   linewidth=1.5, label="VaR")
+                   linewidth=1.5, label="VaR (5%%) Loss: $%.2f" 
+                   % ((metrics['value_before'] - metrics['value_at_risk'])))
 
     axs[1].legend()
 
