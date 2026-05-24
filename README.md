@@ -27,3 +27,7 @@ In the context of this project, Monte Carlo simulation is being used to estimate
 #### What is Geometric Brownian Motion?
 
 Geometric Brownian Motion (GBM) is a stochastic process used to model the evolution of an asset's price. The process originated from Brownian Motion, a concept from physics that was observed through the random movement of pollen particles in water. The "Geometric" extension came later to modify the process for the modeling of asset prices, ensuring they stay positive and grow multiplicatively. GBM assumes that asset prices follow a log-normal distribution, and therefore logarithmic returns are normally distributed. GBM is the foundation of many financial models including Black-Scholes option pricing.
+
+#### Geometric Brownian Motion as a Concept
+
+Geometric Brownian Motion is best understood through analogy. Consider a leaf floating down a river. Its movement is determined by two forces, the current of the river which pushes the leaf in a general direction (drift), and the deviations caused by branches, rocks, other objects in the water, and wind (random shocks). The prices of equities behave in the same manner. Expected return acts as the drift, providing a constant directional pull, while market randomness introduces volatility at each time step. GBM captures these two forces and utilizes them to realistically simulate asset price behavior.
