@@ -47,3 +47,5 @@ Where:
 
 In the context of this project, Geometric Brownian Motion is applied at each time step for every equity in the portfolio to simulate what the price would be the next day. The current price of the equity is utilized as the starting point from which the model then applies the GBM formula 252 times, once per trading day, to generate a price path for each equity with a one year time horizon. The individual paths are then aggregated based on position size in the portfolio to create the path of the portfolio value. This process is repeated for each Monte Carlo simulation to produce thousands of possible price paths for the portfolio, capturing a range of possible outcomes.
 
+### Expected Return using Capital Asset Pricing Model (CAPM)
+
