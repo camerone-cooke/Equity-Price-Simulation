@@ -14,11 +14,11 @@ This program simulates potential future values of an equity portfolio using Geom
 
 ### Monte Carlo Simulation
 
-#### What is Monte Carlo simulation?
+#### What is Monte Carlo Simulation?
 
 Monte Carlo simulation is a way to model the probability of different outcomes for a process whose outcome cannot be easily predicted due to the inclusion of a random variable(s). Monte Carlo simulation is used to understand the impact of risk and uncertainty and in investing can be used to model the range of future prices of an asset. 
 
-#### Monte Carlo simulation used in this project
+#### Monte Carlo Simulation Used in This Project
 
 In the context of this project, Monte Carlo simulation is being used to estimate thousands of possible future values of an equity portfolio. The underlying process modeled in this program is Geometric Brownian Motion. Utilizing a Monte Carlo simulation allows investors to better grasp the range of possible outcomes and their relative likelihood. This also allows for the estimation of the probability of loss, and quantifying downside risk via metrics like Value at Risk.
 
@@ -43,9 +43,28 @@ Where:
 - $\Delta t$ = time step
 - $Z_t$ = random shock from a normal distribution
 
-#### Geometric Brownian Motion used in this Project
+#### Geometric Brownian Motion Used in This Project
 
 In the context of this project, Geometric Brownian Motion is applied at each time step for every equity in the portfolio to simulate what the price would be the next day. The current price of the equity is utilized as the starting point from which the model then applies the GBM formula 252 times, once per trading day, to generate a price path for each equity with a one year time horizon. The individual paths are then aggregated based on position size in the portfolio to create the path of the portfolio value. This process is repeated for each Monte Carlo simulation to produce thousands of possible price paths for the portfolio, capturing a range of possible outcomes.
 
-### Expected Return using Capital Asset Pricing Model (CAPM)
+### Expected Return using the Capital Asset Pricing Model (CAPM)
+
+#### What is the Capital Asset Pricing Model? (CAPM)
+
+The Capital Asset Pricing Model (CAPM) is a financial model utilized to estimate the expected return of an investment based on its riskiness relative to the overall market. This is done by measuring the asset's systematic risk. Systematic risk being the market risk that can not be diversified away, quantified by the asset's beta coefficient. 
+
+CAPM estimates expected return with this formula:
+
+$$\mu = R_f + \beta \cdot (R_m - R_f)$$
+
+Where:
+- $\mu$ = Expected return of the investment
+- $R_f$ = Risk free rate
+- $\beta$ = Beta
+- $R_m$ = Expected return of the market
+- $(R_m - R_f)$ = Equity Risk Premium
+
+#### CAPM Used in This Project
+
+In the context of this project, CAPM is used to determine the expected return for each equity within the portfolio. These expected returns serve as the drift factor inputs for the GBM calculation in order to determine the price of the equities at the next time step. The risk free rate and beta are pulled from Yahoo Finance via the yfinance library. For the risk free rate, the current yield of the 10 year treasury note (^TNX) is used. To determine the expected return of the market, the 10 year compound annual growth rate (CAGR) is used. Due to the 10 year CAGR not being adjusted for inflation, all growth estimates are nominal and not real returns.
 
