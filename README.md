@@ -14,9 +14,9 @@ This program simulates potential future values of an equity portfolio using Geom
 
 ### Monte Carlo Simulation
 
-#### What is a Monte Carlo simulation?
+#### What is Monte Carlo simulation?
 
-A Monte Carlo simulation is a way to model the probability of different outcomes for a process whose outcome cannot be easily predicted due to the inclusion of a random variable(s). The Monte Carlo technique is used to understand the impact of risk and uncertainty and in investing is used to model the range of future prices of an asset. 
+Monte Carlo simulation is a way to model the probability of different outcomes for a process whose outcome cannot be easily predicted due to the inclusion of a random variable(s). Monte Carlo simulation is used to understand the impact of risk and uncertainty and in investing can be used to model the range of future prices of an asset. 
 
 #### Monte Carlo simulation used in this project
 
