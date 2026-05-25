@@ -68,3 +68,22 @@ Where:
 
 In the context of this project, CAPM is used to determine the expected return for each equity within the portfolio. These expected returns serve as the drift factor inputs for the GBM calculation in order to determine the price of the equities at the next time step. The risk free rate and beta are pulled from Yahoo Finance via the yfinance library. For the risk free rate, the current yield of the 10 year treasury note (^TNX) is used. To determine the expected return of the market, the 10 year compound annual growth rate (CAGR) is used. Due to the 10 year CAGR not being adjusted for inflation, all growth estimates are nominal and not real returns.
 
+### Historical Volatility Using Log Returns
+
+#### Why Use Log Returns?
+
+Volatility is measured as the standard deviation of daily returns, which is then annualized. Instead of simple daily returns, this project utilizes log returns for two reasons: 
+
+- The issues created by the multiplicative nature of equity returns
+- The asymmetrically skewed nature of the returns
+
+Equity returns are inherently multiplicative because they compound over time. For example, if a stock gains 10% on day one and draws down 10% on day two, the equity does not return to its initial price. Taking the natural log of these returns converts them from being multiplicative to additive. This means the log return of day one plus the log return of day two gives the log return for the two day period and makes calculations cleaner. 
+
+Simple returns are asymmetric and skewed in nature due to stock prices being unable to fall below zero, capping losses at -100%, although gains can be theoretically infinite. Transforming the returns logarithmically eliminates the skew and maps the returns symmetrically so the data fits a normal distribution.
+
+#### Volatility Used in This Project
+
+In the context of this project, volatility serves as the magnitude of the random shocks when determining the price of the equity at the next time step. To compute this, daily historical closing prices over the last year are taken and the daily log return is calculated. The standard deviation of those returns is then taken and annualized to determine the volatility of the equity.
+
+
+
