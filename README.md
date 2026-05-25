@@ -1,6 +1,6 @@
 # GBM Portfolio Simulator
 
-Monte Carlo portfolio simulator using Geometric Brownian Motion with correlated asset shocks and live market data.
+Monte Carlo portfolio simulator using Geometric Brownian Motion with correlated random shocks and live market data.
 
 ---
 
@@ -16,11 +16,11 @@ This program simulates potential future values of an equity portfolio using Geom
 
 #### What is Monte Carlo Simulation?
 
-Monte Carlo simulation is a way to model the probability of different outcomes for a process whose outcome cannot be easily predicted due to the inclusion of a random variable(s). Monte Carlo simulation is used to understand the impact of risk and uncertainty and in investing can be used to model the range of future prices of an asset. 
+Monte Carlo simulation is a way to model the probability of different outcomes for a process whose outcome cannot be easily predicted due to the inclusion of random variables. Monte Carlo simulation is used to understand the impact of risk and uncertainty and in investing can be used to model the range of future prices of an asset. 
 
 #### Monte Carlo Simulation Used in This Project
 
-In the context of this project, Monte Carlo simulation is being used to estimate thousands of possible future values of an equity portfolio. The underlying process modeled in this program is Geometric Brownian Motion. Utilizing a Monte Carlo simulation allows investors to better grasp the range of possible outcomes and their relative likelihood. This also allows for the estimation of the probability of loss, and quantifying downside risk via metrics like Value at Risk.
+In this project, Monte Carlo simulation is being used to estimate thousands of possible future values of an equity portfolio. The underlying process modeled in this program is Geometric Brownian Motion. Utilizing a Monte Carlo simulation allows investors to better grasp the range of possible outcomes and their relative likelihood. This also allows for the estimation of the probability of loss, and quantifying downside risk via metrics like Value at Risk.
 
 ### Geometric Brownian Motion
 
@@ -30,7 +30,7 @@ Geometric Brownian Motion (GBM) is a stochastic process used to model the evolut
 
 #### Geometric Brownian Motion as a Concept
 
-Geometric Brownian Motion is best understood through analogy. Consider a leaf floating down a river. Its movement is determined by two forces, the current of the river which pushes the leaf in a general direction (drift), and the deviations caused by branches, rocks, other objects in the water, and wind (random shocks). The prices of equities behave in the same manner. Expected return acts as the drift, providing a constant directional pull, while market randomness introduces volatility at each time step. GBM captures these two forces and utilizes them to realistically simulate asset price behavior.
+Geometric Brownian Motion is best understood through analogy. Consider a leaf floating down a river. Its movement is determined by two forces, the current of the river which pushes the leaf in a general direction (drift), and the deviations caused by branches, rocks, other objects in the water, and wind (random shocks). The prices of equities behave in the same manner. Expected return acts as the drift, providing a constant directional pull, while market randomness introduces volatility at each time step. GBM captures these two forces and uses them to realistically simulate asset price behavior.
 
 Geometric Brownian Motion models price evolution with this formula:
 
@@ -45,13 +45,13 @@ Where:
 
 #### Geometric Brownian Motion Used in This Project
 
-In the context of this project, Geometric Brownian Motion is applied at each time step for every equity in the portfolio to simulate what the price would be the next day. The current price of the equity is utilized as the starting point from which the model then applies the GBM formula 252 times, once per trading day, to generate a price path for each equity with a one year time horizon. The individual paths are then aggregated based on position size in the portfolio to create the path of the portfolio value. This process is repeated for each Monte Carlo simulation to produce thousands of possible price paths for the portfolio, capturing a range of possible outcomes.
+Here, Geometric Brownian Motion is applied at each time step for every equity in the portfolio to simulate what the price would be the next day. The current price of the equity is the starting point from which the model then applies the GBM formula 252 times, once per trading day, to generate a price path for each equity with a one year time horizon. The individual paths are then aggregated based on position size in the portfolio to create the path of the portfolio value. This process is repeated for each Monte Carlo simulation to produce thousands of possible price paths for the portfolio, capturing a range of possible outcomes.
 
 ### Expected Return Using the Capital Asset Pricing Model (CAPM)
 
-#### What is the Capital Asset Pricing Model? (CAPM)
+#### What is the Capital Asset Pricing Model?
 
-The Capital Asset Pricing Model (CAPM) is a financial model utilized to estimate the expected return of an investment based on its riskiness relative to the overall market. This is done by measuring the asset's systematic risk. Systematic risk being the market risk that can not be diversified away, quantified by the asset's beta coefficient. 
+The Capital Asset Pricing Model (CAPM) is a financial model used to estimate the expected return of an investment based on its riskiness relative to the overall market. This is done by measuring the asset's systematic risk. Systematic risk is the market risk that cannot be diversified away, quantified by the asset's beta coefficient. 
 
 CAPM estimates expected return with this formula:
 
@@ -66,7 +66,7 @@ Where:
 
 #### CAPM Used in This Project
 
-In the context of this project, CAPM is used to determine the expected return for each equity within the portfolio. These expected returns serve as the drift factor inputs for the GBM calculation in order to determine the price of the equities at the next time step. The risk free rate and beta are pulled from Yahoo Finance via the yfinance library. For the risk free rate, the current yield of the 10 year treasury note (^TNX) is used. To determine the expected return of the market, the 10 year compound annual growth rate (CAGR) is used. Due to the 10 year CAGR not being adjusted for inflation, all growth estimates are nominal and not real returns.
+In the context of this project, CAPM is used to determine the expected return for each equity within the portfolio. These expected returns serve as the drift factor inputs for the GBM calculation to determine the price of the equities at the next time step. For the risk free rate, the current yield of the 10 year treasury note (^TNX) is used. To determine the expected return of the market, the 10 year compound annual growth rate (CAGR) is used. Due to the 10 year CAGR not being adjusted for inflation, all growth estimates are nominal and not real returns.
 
 ### Historical Volatility Using Log Returns
 
@@ -75,15 +75,29 @@ In the context of this project, CAPM is used to determine the expected return fo
 Volatility is measured as the standard deviation of daily returns, which is then annualized. Instead of simple daily returns, this project utilizes log returns for two reasons: 
 
 - The issues created by the multiplicative nature of equity returns
-- The asymmetrically skewed nature of the returns
+- The asymmetric and skewed nature of simple returns
 
-Equity returns are inherently multiplicative because they compound over time. For example, if a stock gains 10% on day one and draws down 10% on day two, the equity does not return to its initial price from day zero. Taking the natural log of these returns converts them from being multiplicative to additive. This means the log return of day one plus the log return of day two gives the log return for the two day period and makes calculations cleaner. 
+Equity returns are inherently multiplicative because they compound over time. For example, if a stock gains 10% on day one and falls 10% on day two, the equity does not return to its initial price from day zero. Taking the natural log of these returns converts them from being multiplicative to additive. This means the log return of day one plus the log return of day two gives the log return for the two day period and makes calculations cleaner. 
 
 Simple returns are asymmetric and skewed in nature due to stock prices being unable to fall below zero, capping losses at -100%, although gains can be theoretically infinite. Transforming the returns logarithmically eliminates the skew and maps the returns symmetrically so the data fits a normal distribution.
 
 #### Volatility Used in This Project
 
-In the context of this project, volatility serves as the magnitude of the random shocks when determining the price of the equity at the next time step. To compute this, daily historical closing prices over the last year are taken and the daily log return is calculated. The standard deviation of those returns is then taken and annualized to determine the volatility of the equity.
+Here, volatility serves as the magnitude of the random shocks when determining the price of the equity at the next time step. To compute this, daily historical closing prices over the last year are taken and the daily log returns are calculated. The standard deviation of those returns is then taken and annualized to determine the volatility of the equity.
+
+### Correlated Random Shocks
+
+#### Why is Correlating Random Shocks Necessary?
+
+When simulating a multi-asset portfolio, the relationships between assets needs to be accounted for. For example, AAPL and NVDA are more likely to move together than AAPL and XOM. Ignoring correlations between equities, consequently treating their random shocks as independant, improperly estimates price paths and creates illusions of diversification when not present in the portfolio. Adding equity correlations to the random shocks used in GBM takes 3 main steps:
+
+- Calculating the correlations between asset pairs
+- Converting correlation matrix to covariance matrix
+- Applying Cholesky decomposition to generate correlated random shocks
+
+Correlation is the measure of the degree to which two assets move in relation to one another. The correlation matrix is created by computing daily log returns for each equity and calculating the correlation coefficient of each asset pair. These correlation values can range from -1.0 (inversely correlated) to 1.0 (positively correlated).
+
+The covariance matrix is then generated by capturing how much two assets move together by accounting for their individual volatilies and their correlation. An equity with high volatility that is highly correlated to another equity will have a large covariance with that equity, whereas uncorrelated equities will have a covariance near zero. The covariance matrix is simply the correlation matrix scaled by the volatilities of each asset pair.
 
 
 
