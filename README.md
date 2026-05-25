@@ -47,7 +47,7 @@ Where:
 
 In the context of this project, Geometric Brownian Motion is applied at each time step for every equity in the portfolio to simulate what the price would be the next day. The current price of the equity is utilized as the starting point from which the model then applies the GBM formula 252 times, once per trading day, to generate a price path for each equity with a one year time horizon. The individual paths are then aggregated based on position size in the portfolio to create the path of the portfolio value. This process is repeated for each Monte Carlo simulation to produce thousands of possible price paths for the portfolio, capturing a range of possible outcomes.
 
-### Expected Return using the Capital Asset Pricing Model (CAPM)
+### Expected Return Using the Capital Asset Pricing Model (CAPM)
 
 #### What is the Capital Asset Pricing Model? (CAPM)
 
@@ -77,7 +77,7 @@ Volatility is measured as the standard deviation of daily returns, which is then
 - The issues created by the multiplicative nature of equity returns
 - The asymmetrically skewed nature of the returns
 
-Equity returns are inherently multiplicative because they compound over time. For example, if a stock gains 10% on day one and draws down 10% on day two, the equity does not return to its initial price. Taking the natural log of these returns converts them from being multiplicative to additive. This means the log return of day one plus the log return of day two gives the log return for the two day period and makes calculations cleaner. 
+Equity returns are inherently multiplicative because they compound over time. For example, if a stock gains 10% on day one and draws down 10% on day two, the equity does not return to its initial price from day zero. Taking the natural log of these returns converts them from being multiplicative to additive. This means the log return of day one plus the log return of day two gives the log return for the two day period and makes calculations cleaner. 
 
 Simple returns are asymmetric and skewed in nature due to stock prices being unable to fall below zero, capping losses at -100%, although gains can be theoretically infinite. Transforming the returns logarithmically eliminates the skew and maps the returns symmetrically so the data fits a normal distribution.
 
