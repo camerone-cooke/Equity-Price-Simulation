@@ -108,4 +108,23 @@ Upon execution, the program generates a two-part breakdown of the simulation res
 - A visual display detailing portfolio price paths and distribution of final portfolio values
 - A summary of relevant portfolio metrics displayed in the console
 
+#### Example Output
+
+Portfolio specified for results:
+- Tickers: NVDA, WMT, NEE, LLY, JPM
+- Shares: [1, 1, 1, 1, 1]
+- Simulation horizon: 252 trading days
+- Number of simulations: 10,000
+
+![Portfolio Simulation Output](https://github.com/camerone-cooke/GBM-Portfolio-Simulator/blob/main/GBM_Portfolio_Simulator_Output.png)
+
+Output to console:
+- Starting Value: $1795.53
+- Average Projected Value: $1962.11
+- Median Projected Value: $1949.62
+- Percent Change: +9.28%
+- VaR (95%): $1708.19 (Loss: $87.34, 4.68% Downside)
+- Probability of Loss: 16.13%
+- Sharpe Ratio: 0.30
+- Sortino Ratio: 0.42
 
