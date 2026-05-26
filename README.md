@@ -160,6 +160,17 @@ Output to console:
   * `numpy` - For operations on multi-dimension arrays to generate random walks
   * `pandas` - For aligning time series data on multiple assets
   * `matplotlib` & `seaborn` - For data visualization of price paths and final portfolio value histogram
+ 
+---
+
+## Skills Demonstrated
+
+This project demonstrates:
+- Quantitative Development: Translated an advanced mathematical model into Python
+- Stochastic Modeling: Utilized Geometric Brownian Motion to determine potential values of a multi-asset portfolio
+- Monte Carlo Simulation: Executed 10,000 iterations to generate range of possible portfolio price paths
+- Correlation Application: Used matrix decomposition to mirror the influence of asset pair correlations
+- Risk Analysis: Evaluated risk by calculating Value at Risk (VaR), Probability of Loss, and risk-adjusted return ratios (Sharpe and Sortino)
 
 
 
