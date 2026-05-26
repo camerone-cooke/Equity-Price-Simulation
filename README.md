@@ -142,6 +142,14 @@ Output to console:
 - Sharpe Ratio: Measures the portfolio's risk-adjusted return by calculating excess return per unit of risk
 - Sortino Ratio: Measures the portfolio's risk-adjusted return relative to specifically harmful risk by calculating excess return per unit of downside risk
 
+---
+
+## Key Features
+
+- Historical Data: Live market data is fetched dynamically via the yfinance library, automating data collection for simulation.
+- Cholesky Decomposition: Cholesky decomposition is applied to a historical covariance matrix, mirroring the influence of asset pair correlations by influencing random shocks.
+- Risk Assessment: Portfolio risk is assessed by calculating Value at Risk, Probability of Loss, and risk-adjusted return ratios (Sharpe and Sortino).
+
 
 
 
