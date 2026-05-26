@@ -150,6 +150,17 @@ Output to console:
 - Cholesky Decomposition: Cholesky decomposition is applied to a historical covariance matrix, mirroring the influence of asset pair correlations by influencing random shocks.
 - Risk Assessment: Portfolio risk is assessed by calculating Value at Risk, Probability of Loss, and risk-adjusted return ratios (Sharpe and Sortino).
 
+---
+
+## Tech Stack & Libraries
+
+- Language: Python 3.12.5
+- Libraries
+  * `yfinance` - For dynamically fetching historical market data and asset information
+  * `numpy` - For operations on multi-dimension arrays to generate random walks
+  * `pandas` - For aligning time series data on multiple assets
+  * `matplotlib` & `seaborn` - For data visualization of price paths and final portfolio value histogram
+
 
 
 
