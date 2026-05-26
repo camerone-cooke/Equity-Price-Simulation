@@ -108,7 +108,7 @@ This function calculates all needed inputs for GBM calculation.
 """
 def GBMInputs(positions):
     dt = 1 / TRADING_DAYS
-    rf = (yf.Ticker('^TNX').history(period='1d')['Close'].iloc[-1]) / 100
+    rf = (yf.Ticker('^TNX').history(period='5d')['Close'].iloc[-1]) / 100
 
     s = np.array([])
     mu = np.array([])
