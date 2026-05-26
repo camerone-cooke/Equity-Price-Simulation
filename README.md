@@ -128,3 +128,18 @@ Output to console:
 - Sharpe Ratio: 0.30
 - Sortino Ratio: 0.42
 
+#### Understanding Output
+
+Graphical Output:
+- Left plot: A time-series chart exhibiting all 10,000 projected portfolio trajectories over the 252 day horizon. The price paths that exemplify the Mean, 1st Quartile, and 3rd Quartile are also shown in black.
+- Right plot: A histogram bucketing the frequency of the final portfolio values. The initial portfolio value displayed as a blue dotted line and the VaR displayed as a solid black line.
+
+Output to console:
+- Value at Risk (VaR): The minimum expected loss at a specified confidence level (95%)
+- Probability of Loss: The proportion of the 10,000 simulated paths that ended at a final value lower than the initial value, indicating the likelihood of a loss
+- Sharpe Ratio: Measures the portfolio's risk-adjusted return by calculating excess return per unit of risk
+- Sortino Ratio: Measures the portfolio's risk-adjusted return relative to specifically harmful risk by calculating excess return per unit of downside risk
+
+
+
+
