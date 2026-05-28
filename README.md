@@ -1,6 +1,6 @@
 # GBM Portfolio Simulator
 
-Monte Carlo portfolio simulator using Geometric Brownian Motion with correlated random shocks and live market data.
+Monte Carlo portfolio simulator using Geometric Brownian Motion with correlated random shocks and live market data for generating potential future portfolio values and modeling risk.
 
 ---
 
