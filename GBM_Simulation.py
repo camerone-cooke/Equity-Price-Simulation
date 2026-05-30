@@ -33,8 +33,8 @@ def main():
 Prompt user for positions in portfolio and number of shares of each position.
 """
 def get_portfolio():
-    positions = np.array([])
-    shares = np.array([])
+    positions = []
+    shares = []
     # prompt user for ticker
     ticker = input('What Equity\'s price would you like to simulate? '
                     'or \'quit\' to stop: ').upper()
@@ -43,8 +43,8 @@ def get_portfolio():
         share_count = float(input('How many Shares of this equity? '))
 
         # add ticker to positions and number of shares to shares
-        positions = np.append(positions, ticker)
-        shares = np.append(shares, share_count)
+        positions.append(ticker)
+        shares.append(share_count)
         
         # re-prompt user for next ticker
         ticker = input('What Equity\'s price would you like to simulate? '
