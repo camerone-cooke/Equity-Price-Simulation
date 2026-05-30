@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import time
 
 TRADING_DAYS = 252
 SIMULATIONS = 10000
@@ -349,5 +350,8 @@ def portfolio_display(mu, sig, rf, positions, shares, portfolio_paths):
 
 
 if __name__=="__main__":
+    start = time.time()
     main()
+    end = time.time()
+    print("Runtime: %.2f seconds" % (end - start))
     
