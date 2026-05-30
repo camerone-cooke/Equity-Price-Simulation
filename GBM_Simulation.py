@@ -24,11 +24,14 @@ Check if number of positions is valid and then run simulation on portfolio.
 """
 def main():
     positions, shares = get_portfolio()
+    start = time.time()
     if (len(positions) < 1):
         print("No positions given")
     else:
         mu, sig, rf, portfolio_paths = monte_carlo_simulation(positions, shares)
         portfolio_display(mu, sig, rf, positions, shares, portfolio_paths)
+    end = time.time()
+    print("Runtime: %.2f seconds" % (end - start))
 
 """
 Prompt user for positions in portfolio and number of shares of each position.
@@ -350,8 +353,5 @@ def portfolio_display(mu, sig, rf, positions, shares, portfolio_paths):
 
 
 if __name__=="__main__":
-    start = time.time()
     main()
-    end = time.time()
-    print("Runtime: %.2f seconds" % (end - start))
     
