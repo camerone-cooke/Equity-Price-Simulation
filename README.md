@@ -163,6 +163,35 @@ Output to console:
  
 ---
 
+## How to Run
+
+Install Dependencies:
+```bash
+pip install yfinance numpy pandas matplotlib seaborn
+```
+
+Run Script:
+```bash
+# For Mac or Linux
+python3 GBM_Simulation.py
+
+# For Windows
+python GBM_Simulation.py
+```
+
+Enter Equity Positions:
+```text
+What Equity's price would you like to simulate? or 'quit' to stop: AAPL
+How many Shares of this equity? 5
+What Equity's price would you like to simulate? or 'quit' to stop: MSFT
+How many Shares of this equity? 9
+What Equity's price would you like to simulate? or 'quit' to stop: NVDA
+How many Shares of this equity? 2
+What Equity's price would you like to simulate? or 'quit' to stop: quit
+```
+
+---
+
 ## Skills Demonstrated
 
 This project demonstrates:
