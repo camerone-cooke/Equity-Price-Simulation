@@ -22,17 +22,17 @@ SIMULATIONS = 10000
 Check if number of positions is valid and then run simulation on portfolio.
 """
 def main():
-    positions, shares = getPortfolio()
+    positions, shares = get_portfolio()
     if (len(positions) < 1):
         print("No positions given")
     else:
-        mu, sig, rf, portfolio_paths = monteCarloSimulation(positions, shares)
-        portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths)
+        mu, sig, rf, portfolio_paths = monte_carlo_simulation(positions, shares)
+        portfolio_display(mu, sig, rf, positions, shares, portfolio_paths)
 
 """
 Prompt user for positions in portfolio and number of shares of each position.
 """
-def getPortfolio():
+def get_portfolio():
     positions = np.array([])
     shares = np.array([])
     # prompt user for ticker
@@ -62,7 +62,7 @@ rf = risk free rate
 ba = beta of equity
 rp = equity risk premium
 """
-def expectedReturnCalculation(ticker, rf):
+def expected_return_calculation(ticker, rf):
     ba = yf.Ticker(ticker).info.get('beta')
     rm = ((yf.Ticker('SPY').history(period="10y")['Close'].iloc[-1] 
            / yf.Ticker('SPY').history(period="10y")['Close'].iloc[0]) 
@@ -77,7 +77,7 @@ as the magnitude of the 'shocks'. Sigma is determined by taking the daily
 logarithmic returns of the equity. The formula for determining sigma is:
 sig = daily_volatility * np.sqrt(252)
 """
-def volatilityCalculation(ticker):
+def volatility_calculation(ticker):
     historical_price_data = yf.Ticker(ticker).history(period='1y')['Close']
     logarithmic_returns = np.log(historical_price_data 
                                  / historical_price_data.shift(1))
@@ -93,7 +93,7 @@ another. Their correlation value can range from -1.0 (inversely correlated) to
 logarithmic returns of each equity in the portfolio and computing the pairwise
 correlation coefficients between all equity pairs.
 """
-def correlationCalculation(positions):
+def correlation_calculation(positions):
     historical_price_data = pd.DataFrame()
     for index in range(0, len(positions)):
         historical_price_data[positions[index]] = yf.Ticker(positions[index]).history(period='1y')['Close']
@@ -106,7 +106,7 @@ def correlationCalculation(positions):
 """
 This function calculates all needed inputs for GBM calculation.
 """
-def GBMInputs(positions):
+def gbm_inputs(positions):
     dt = 1 / TRADING_DAYS
     rf = (yf.Ticker('^TNX').history(period='5d')['Close'].iloc[-1]) / 100
 
@@ -117,10 +117,10 @@ def GBMInputs(positions):
     for index in range(len(positions)):
         s = np.append(s, 
                         yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
-        mu = np.append(mu, float(expectedReturnCalculation(positions[index], rf)))
-        sig = np.append(sig, volatilityCalculation(positions[index]))
+        mu = np.append(mu, float(expected_return_calculation(positions[index], rf)))
+        sig = np.append(sig, volatility_calculation(positions[index]))
     
-    corr_matrix = correlationCalculation(positions)
+    corr_matrix = correlation_calculation(positions)
     cov_matrix = np.outer(sig, sig) * corr_matrix
     l = np.linalg.cholesky(cov_matrix)
     return s, mu, sig, rf, l, dt
@@ -135,7 +135,7 @@ sig = volatility
 dt = time delta
 correlated_z = correlated random shock
 """
-def GBMCalculation(positions, s, mu, sig, correlated_z, dt):
+def gbm_calculation(positions, s, mu, sig, correlated_z, dt):
     # calculate possible future price(s)
     future_prices = np.array([])
     for index in range(0, len(positions)):
@@ -153,8 +153,8 @@ price as the starting price. The price path generated for each equity is
 adjusted to account for share counts and summed to get portfolio value for each 
 simulated trading day.
 """
-def monteCarloSimulation(positions, shares):
-    s, mu, sig, rf, l, dt = GBMInputs(positions)
+def monte_carlo_simulation(positions, shares):
+    s, mu, sig, rf, l, dt = gbm_inputs(positions)
     portfolio_paths = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
     for iteration in range(0, SIMULATIONS):
         z = np.random.normal(size=(len(positions), TRADING_DAYS))
@@ -163,7 +163,7 @@ def monteCarloSimulation(positions, shares):
         price_paths[:, 0] = s
         portfolio_paths[iteration, 0] = np.sum(s * shares)
         for step in range(1, TRADING_DAYS + 1):
-            price_paths[:, step] = GBMCalculation(positions, 
+            price_paths[:, step] = gbm_calculation(positions, 
                                                     price_paths[:, step - 1], 
                                                     mu, 
                                                     sig, 
@@ -177,7 +177,7 @@ This function calculates the weighting of each position in the portfolio. The
 weight of each position is determined by calculating the total value of that
 position (price * shares) and then dividing by the total value of the portfolio.
 """
-def portfolioWeightingCalculation(positions, shares, portfolio_paths):
+def portfolio_weighting_calculation(positions, shares, portfolio_paths):
     portfolio_value = portfolio_paths[0, 0]
     prices = np.array([])
     for index in range(0, len(positions)):
@@ -197,9 +197,9 @@ sig = volatility
 The sharpe of each equity is then multiplied by its respective equity's weight
 in the portfolio. The weighted sharpes are then summmed to get the portfolio sharpe.
 """
-def sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths):
+def sharpe_calculation(mu, sig, rf, positions, shares, portfolio_paths):
     sharpes = ((mu - rf) / sig)
-    weights = portfolioWeightingCalculation(positions, shares, portfolio_paths)
+    weights = portfolio_weighting_calculation(positions, shares, portfolio_paths)
     weighted_sharpe = np.dot(sharpes, weights)
     return weighted_sharpe
 
@@ -211,7 +211,7 @@ negative equity risk premium. This is done by taking all days where the log
 returns are less than the daily risk free returns and calculating their standard 
 deviation.
 """
-def downsideDeviationCalculation(ticker, rf):
+def downside_deviation_calculation(ticker, rf):
     rfDaily = rf/252
     historical_price_data = yf.Ticker(ticker).history(period='1y')['Close']
     logarithmic_returns = np.log(historical_price_data 
@@ -236,13 +236,13 @@ downside_deviation = standard deviation of negative returns
 The sortino of each equity is then multiplied by its respective equity's weight
 in the portfolio. The weighted sortinos are then summmed to get the portfolio sortino.
 """
-def sortinoCalculation(mu, rf, positions, shares, portfolio_paths):
+def sortino_calculation(mu, rf, positions, shares, portfolio_paths):
     downside_deviations = np.array([])
     for equity in positions:
         downside_deviations = np.append(downside_deviations, 
-                                        downsideDeviationCalculation(equity, rf))
+                                        downside_deviation_calculation(equity, rf))
     sortinos = (mu - rf) / downside_deviations
-    weights = portfolioWeightingCalculation(positions, shares, portfolio_paths)
+    weights = portfolio_weighting_calculation(positions, shares, portfolio_paths)
     weighted_sortino = np.dot(sortinos, weights)
     return weighted_sortino
 
@@ -254,7 +254,7 @@ Probability of loss is the percentage of simulations that resulted in a final
 portfolio value which was below the starting portfolio value, indicating an 
 overall loss after the simulation.
 """
-def portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths):
+def portfolio_metrics(mu, sig, rf, positions, shares, portfolio_paths):
     portfolio_value_before_simulation = portfolio_paths[0, 0]
     final_prices = portfolio_paths[:, -1]
     average_portfolio_value_after_simulation = np.mean(final_prices)
@@ -263,8 +263,8 @@ def portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths):
                       / portfolio_value_before_simulation) - 1) * 100
     value_at_risk = np.percentile(final_prices, 5)
     probability_of_loss = np.mean(final_prices < portfolio_value_before_simulation) * 100
-    portfolio_sharpe = sharpeCalculation(mu, sig, rf, positions, shares, portfolio_paths)
-    portfolio_sortino = sortinoCalculation(mu, rf, positions, shares, portfolio_paths)
+    portfolio_sharpe = sharpe_calculation(mu, sig, rf, positions, shares, portfolio_paths)
+    portfolio_sortino = sortino_calculation(mu, rf, positions, shares, portfolio_paths)
     return {
         'value_before': portfolio_value_before_simulation,
         'average_value': average_portfolio_value_after_simulation,
@@ -280,9 +280,9 @@ def portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths):
 This function generates the graphical display of the portfolio and outputs
 portfolio metrics to the terminal.
 """
-def portfolioDisplay(mu, sig, rf, positions, shares, portfolio_paths):
+def portfolio_display(mu, sig, rf, positions, shares, portfolio_paths):
     # calculate metrics to be displayed
-    metrics = portfolioMetrics(mu, sig, rf, positions, shares, portfolio_paths)
+    metrics = portfolio_metrics(mu, sig, rf, positions, shares, portfolio_paths)
     
     # output metrics to terminal
     print('\nPortfolio Results')
