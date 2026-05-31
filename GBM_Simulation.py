@@ -57,6 +57,13 @@ def get_portfolio():
     return positions, shares
 
 """
+Retrieve all data needed.
+"""
+def retrieve_historical_data(positions):
+
+    return
+
+"""
 Expected return is utilized in GBM to calculate the drift factor and is 
 determined using the Capital Asset Pricing Model (CAPM) whose formula is:
 mu = rf + ba * rp
