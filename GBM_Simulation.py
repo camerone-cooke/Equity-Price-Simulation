@@ -70,7 +70,15 @@ def retrieve_historical_data(positions):
         auto_adjust=True
     )["Close"]
 
-    return historical_price_data
+    # retrieve 10y data needed for spy, save first and last value to get change
+    spy_historical_data = yf.download(
+        "SPY",
+        period="1y",
+        auto_adjust=True
+    )["Close"]
+    spy_10y_data = [spy_historical_data[0], spy_historical_data[-1]]
+
+    return historical_price_data, spy_10y_data
 
 """
 Expected return is utilized in GBM to calculate the drift factor and is 
