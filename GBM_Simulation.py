@@ -167,7 +167,7 @@ sig = volatility
 dt = time delta
 correlated_z = correlated random shock
 """
-def gbm_calculation(historical_price_data, s, mu, sig, correlated_z, dt):
+def gbm_calculation(s, mu, sig, correlated_z, dt):
     # calculate possible future price(s)
     drift = (mu - (0.5 * (sig ** 2))) * dt
     diffusion = (sig * np.sqrt(dt) * correlated_z)
