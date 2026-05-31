@@ -28,6 +28,7 @@ def main():
     if (len(positions) < 1):
         print("No positions given")
     else:
+        historical_price_data, spy_10y_data, rf, beta = retrieve_historical_data(positions)
         mu, sig, rf, portfolio_paths = monte_carlo_simulation(positions, shares)
         portfolio_display(mu, sig, rf, positions, shares, portfolio_paths)
     end = time.time()
