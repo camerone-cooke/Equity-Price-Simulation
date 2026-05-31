@@ -107,7 +107,7 @@ rf = risk free rate
 ba = beta of equity
 rp = equity risk premium
 """
-def expected_return_calculation(positions, spy_10y_data, rf, beta):
+def expected_return_calculation(spy_10y_data, rf, beta):
     ba = beta
     rm = ((spy_10y_data[1] / spy_10y_data[0]) ** (1 / 10)) - 1
     rp = (rm - rf)
