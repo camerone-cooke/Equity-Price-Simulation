@@ -78,7 +78,10 @@ def retrieve_historical_data(positions):
     )["Close"]
     spy_10y_data = [spy_historical_data[0], spy_historical_data[-1]]
 
-    return historical_price_data, spy_10y_data
+    # retrieve most recent risk free rate based on 10 year treasury note close
+    rf = (yf.download("^TNX", period="5d")["Close"].iloc[-1]) / 100
+
+    return historical_price_data, spy_10y_data, rf
 
 """
 Expected return is utilized in GBM to calculate the drift factor and is 
