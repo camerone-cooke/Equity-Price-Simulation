@@ -145,21 +145,14 @@ def correlation_calculation(historical_price_data):
 """
 This function calculates all needed inputs for GBM calculation.
 """
-def gbm_inputs(positions, historical_price_data, spy_10y_data, rf, beta):
+def gbm_inputs(historical_price_data, spy_10y_data, rf, beta):
     dt = 1 / TRADING_DAYS
-    rf = (yf.Ticker('^TNX').history(period='5d')['Close'].iloc[-1]) / 100
 
-    s = np.array([])
-    mu = np.array([])
-    sig = np.array([])
-
-    for index in range(len(positions)):
-        s = np.append(s, 
-                        yf.Ticker(positions[index]).history(period="1d")["Close"].iloc[-1])
-        mu = np.append(mu, float(expected_return_calculation(positions[index], rf)))
-        sig = np.append(sig, volatility_calculation(positions[index]))
+    s = historical_price_data[:, -1]
+    mu = expected_return_calculation(spy_10y_data, rf, beta)
+    sig = volatility_calculation(historical_price_data)
     
-    corr_matrix = correlation_calculation(positions)
+    corr_matrix = correlation_calculation(historical_price_data)
     cov_matrix = np.outer(sig, sig) * corr_matrix
     l = np.linalg.cholesky(cov_matrix)
     return s, mu, sig, l, dt
