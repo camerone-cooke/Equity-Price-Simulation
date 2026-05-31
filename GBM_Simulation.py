@@ -151,7 +151,7 @@ def correlation_calculation(positions):
 """
 This function calculates all needed inputs for GBM calculation.
 """
-def gbm_inputs(positions):
+def gbm_inputs(positions, historical_price_data, spy_10y_data, rf, beta):
     dt = 1 / TRADING_DAYS
     rf = (yf.Ticker('^TNX').history(period='5d')['Close'].iloc[-1]) / 100
 
@@ -168,7 +168,7 @@ def gbm_inputs(positions):
     corr_matrix = correlation_calculation(positions)
     cov_matrix = np.outer(sig, sig) * corr_matrix
     l = np.linalg.cholesky(cov_matrix)
-    return s, mu, sig, rf, l, dt
+    return s, mu, sig, l, dt
 
 """
 Geometric Brownian Motion (GBM) is calculated using the formula:
@@ -199,7 +199,7 @@ adjusted to account for share counts and summed to get portfolio value for each
 simulated trading day.
 """
 def monte_carlo_simulation(positions, shares, historical_price_data, spy_10y_data, rf, beta):
-    s, mu, sig, rf, l, dt = gbm_inputs(positions)
+    s, mu, sig, l, dt = gbm_inputs(positions, historical_price_data, spy_10y_data, rf, beta)
     portfolio_paths = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
     for iteration in range(0, SIMULATIONS):
         z = np.random.normal(size=(len(positions), TRADING_DAYS))
