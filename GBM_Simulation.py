@@ -167,16 +167,13 @@ sig = volatility
 dt = time delta
 correlated_z = correlated random shock
 """
-def gbm_calculation(positions, s, mu, sig, correlated_z, dt):
+def gbm_calculation(historical_price_data, s, mu, sig, correlated_z, dt):
     # calculate possible future price(s)
-    future_prices = np.array([])
-    for index in range(0, len(positions)):
-        drift = (mu[index] - (0.5 * (sig[index] ** 2))) * dt
-        diffusion = (sig[index] * np.sqrt(dt) * correlated_z[index])
-        next_price = s[index] * np.exp(drift + diffusion)
-        future_prices = np.append(future_prices,  next_price)
+    drift = (mu - (0.5 * (sig ** 2))) * dt
+    diffusion = (sig * np.sqrt(dt) * correlated_z)
+    next_prices = s * np.exp(drift + diffusion)
 
-    return future_prices
+    return next_prices
 
 """
 Monte Carlo Simulation performed running GBM calculation for each trading day
@@ -195,7 +192,7 @@ def monte_carlo_simulation(positions, shares, historical_price_data, spy_10y_dat
         price_paths[:, 0] = s
         portfolio_paths[iteration, 0] = np.sum(s * shares)
         for step in range(1, TRADING_DAYS + 1):
-            price_paths[:, step] = gbm_calculation(positions, 
+            price_paths[:, step] = gbm_calculation(historical_price_data, 
                                                     price_paths[:, step - 1], 
                                                     mu, 
                                                     sig, 
