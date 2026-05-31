@@ -29,7 +29,14 @@ def main():
         print("No positions given")
     else:
         historical_price_data, spy_10y_data, rf, beta = retrieve_historical_data(positions)
-        mu, sig, rf, portfolio_paths = monte_carlo_simulation(positions, shares)
+        mu, sig, portfolio_paths = monte_carlo_simulation(
+            positions, 
+            shares, 
+            historical_price_data, 
+            spy_10y_data, 
+            rf, 
+            beta
+            )
         portfolio_display(mu, sig, rf, positions, shares, portfolio_paths)
     end = time.time()
     print("Runtime: %.2f seconds" % (end - start))
@@ -191,7 +198,7 @@ price as the starting price. The price path generated for each equity is
 adjusted to account for share counts and summed to get portfolio value for each 
 simulated trading day.
 """
-def monte_carlo_simulation(positions, shares):
+def monte_carlo_simulation(positions, shares, historical_price_data, spy_10y_data, rf, beta):
     s, mu, sig, rf, l, dt = gbm_inputs(positions)
     portfolio_paths = np.zeros((SIMULATIONS, TRADING_DAYS + 1))
     for iteration in range(0, SIMULATIONS):
@@ -208,7 +215,7 @@ def monte_carlo_simulation(positions, shares):
                                                     correlated_z[:, step - 1], 
                                                     dt)
             portfolio_paths[iteration, step] = np.sum(price_paths[:, step] * shares)
-    return mu, sig, rf, portfolio_paths
+    return mu, sig, portfolio_paths
 
 """
 This function calculates the weighting of each position in the portfolio. The
