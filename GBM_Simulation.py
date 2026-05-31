@@ -60,8 +60,17 @@ def get_portfolio():
 Retrieve all data needed.
 """
 def retrieve_historical_data(positions):
+    # use yf.download instead of yf.Ticker (for a single ticker) or yf.Tickers 
+    # (for multiple tickers) due to being more efficient (uses multi-threading)
 
-    return
+    # retrieve price data for all tickers/positions at one time
+    historical_price_data = yf.download(
+        positions,
+        period="1y",
+        auto_adjust=True
+    )["Close"]
+
+    return historical_price_data
 
 """
 Expected return is utilized in GBM to calculate the drift factor and is 
