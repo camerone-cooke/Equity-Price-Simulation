@@ -135,10 +135,7 @@ another. Their correlation value can range from -1.0 (inversely correlated) to
 logarithmic returns of each equity in the portfolio and computing the pairwise
 correlation coefficients between all equity pairs.
 """
-def correlation_calculation(positions):
-    historical_price_data = pd.DataFrame()
-    for index in range(0, len(positions)):
-        historical_price_data[positions[index]] = yf.Ticker(positions[index]).history(period='1y')['Close']
+def correlation_calculation(historical_price_data):
     logarithmic_returns = np.log(historical_price_data 
                                  / historical_price_data.shift(1))
     cleaned_returns = logarithmic_returns.dropna()
