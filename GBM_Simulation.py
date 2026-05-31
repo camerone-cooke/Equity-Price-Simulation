@@ -120,8 +120,7 @@ as the magnitude of the 'shocks'. Sigma is determined by taking the daily
 logarithmic returns of the equity. The formula for determining sigma is:
 sig = daily_volatility * np.sqrt(252)
 """
-def volatility_calculation(ticker):
-    historical_price_data = yf.Ticker(ticker).history(period='1y')['Close']
+def volatility_calculation(historical_price_data):
     logarithmic_returns = np.log(historical_price_data 
                                  / historical_price_data.shift(1))
     cleaned_returns = logarithmic_returns.dropna()
